@@ -8,6 +8,7 @@ import Login from './pages/Auth/Login';
 import Register from './pages/Auth/Register';
 import Recipes from './pages/Recipes/Recipes';
 import CreateRecipe from './pages/CreateRecipe/CreateRecipe';
+import Profile from './pages/Profile/Profile';
 
 function App() {
   const { isAuthenticated, isLoading, checkAuth } = useAuthStore();
@@ -28,6 +29,10 @@ function App() {
           <Route path='/' element={<Recipes />} />
           <Route path='/login' element={!isAuthenticated ? <Login /> : <Navigate to='/' />} />
           <Route path='/register' element={!isAuthenticated ? <Register /> : <Navigate to='/' />} />
+          <Route
+            path='/profile'
+            element={isAuthenticated ? <Profile /> : <Navigate to='/login' />}
+          />
           <Route
             path='/create'
             element={isAuthenticated ? <CreateRecipe /> : <Navigate to='/login' />}

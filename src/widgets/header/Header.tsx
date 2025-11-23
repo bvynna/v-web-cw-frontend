@@ -19,6 +19,7 @@ const Header: React.FC = () => {
         <nav>
           {isAuthenticated ? (
             <div className='user-menu'>
+              <Link to='/profile'>Мой профиль</Link>
               <span>Привет, {user?.name}!</span>
               <Link to='/create'>Создать рецепт</Link>
               <button onClick={handleLogout}>Выйти</button>
