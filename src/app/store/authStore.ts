@@ -78,8 +78,6 @@ export const useAuthStore = create<AuthState>((set, get) => ({
 
       axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
 
-      // Можно добавить endpoint для проверки токена, например /api/auth/me
-      // Пока просто устанавливаем флаг аутентификации
       set({ isAuthenticated: true, isLoading: false });
     } catch (error) {
       localStorage.removeItem('token');
