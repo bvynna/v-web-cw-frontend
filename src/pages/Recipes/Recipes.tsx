@@ -112,14 +112,16 @@ const Recipes: React.FC = () => {
               <p className='recipe-description'>{recipe.description}</p>
 
               {recipe.imageUrl && (
-                <div className='recipe-image'>
-                  <img
-                    src={`http://localhost:5000${recipe.imageUrl}`}
-                    alt={recipe.title}
-                    onError={e => {
-                      (e.target as HTMLImageElement).style.display = 'none';
-                    }}
-                  />
+                <div className='recipe-image-container'>
+                  <div className='recipe-image'>
+                    <img
+                      src={`http://localhost:5000${recipe.imageUrl}`}
+                      alt={recipe.title}
+                      onError={e => {
+                        (e.target as HTMLImageElement).style.display = 'none';
+                      }}
+                    />
+                  </div>
                 </div>
               )}
 

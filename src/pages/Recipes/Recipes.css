@@ -121,15 +121,23 @@
   margin: 1rem 0;
   border-radius: 8px;
   overflow: hidden;
-  max-width: 100%;
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  background-color: #f8f9fa;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .recipe-image img {
   width: 100%;
-  height: auto;
-  max-height: 400px;
+  height: 100%;
   object-fit: cover;
   border-radius: 8px;
+}
+.recipe-image-container {
+  max-width: 500px;
+  margin: 1rem auto;
 }
 
 .recipe-details {
@@ -224,5 +232,9 @@
 
   .recipe-title {
     font-size: 1.1rem;
+  }
+  .recipe-image img {
+    max-width: 100%;
+    height: auto;
   }
 }
