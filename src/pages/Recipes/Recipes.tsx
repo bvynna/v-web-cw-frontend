@@ -22,7 +22,7 @@ interface Recipe {
 const Recipes: React.FC = () => {
   const [recipes, setRecipes] = useState<Recipe[]>([]);
   const [expandedRecipeId, setExpandedRecipeId] = useState<number | null>(null);
-  const { user } = useAuthStore();
+  const { user, isAuthenticated } = useAuthStore();
   const { addToFavorites, removeFromFavorites, checkFavoriteStatus } = useFavoriteStore();
   const [favoriteStatus, setFavoriteStatus] = useState<{ [key: number]: boolean }>({});
 
@@ -31,8 +31,19 @@ const Recipes: React.FC = () => {
   }, []);
 
   useEffect(() => {
-    // Проверяем статус избранного для каждого рецепта
+    if (!isAuthenticated) {
+      setFavoriteStatus({});
+      fetchRecipes();
+    }
+  }, [isAuthenticated]);
+
+  useEffect(() => {
     const checkFavorites = async () => {
+      if (!isAuthenticated || recipes.length === 0) {
+        setFavoriteStatus({});
+        return;
+      }
+
       const status: { [key: number]: boolean } = {};
       for (const recipe of recipes) {
         status[recipe.id] = await checkFavoriteStatus(recipe.id);
@@ -40,10 +51,8 @@ const Recipes: React.FC = () => {
       setFavoriteStatus(status);
     };
 
-    if (recipes.length > 0) {
-      checkFavorites();
-    }
-  }, [recipes, checkFavoriteStatus]);
+    checkFavorites();
+  }, [recipes, checkFavoriteStatus, isAuthenticated]);
 
   const fetchRecipes = async (): Promise<void> => {
     try {
@@ -84,6 +93,11 @@ const Recipes: React.FC = () => {
   };
 
   const handleLike = async (recipeId: number): Promise<void> => {
+    if (!isAuthenticated) {
+      alert('Войдите в аккаунт чтобы добавлять в избранное');
+      return;
+    }
+
     try {
       if (favoriteStatus[recipeId]) {
         // Удаляем из избранного
