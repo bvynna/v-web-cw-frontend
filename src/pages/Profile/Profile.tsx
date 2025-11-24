@@ -6,10 +6,24 @@ import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 import './Profile.css';
 
+const CATEGORIES = [
+  { value: 'all', label: '📝 Все рецепты' },
+  { value: 'breakfast', label: '🍳 Завтрак' },
+  { value: 'lunch', label: '🍲 Обед' },
+  { value: 'dinner', label: '🍽️ Ужин' },
+  { value: 'dessert', label: '🍰 Десерт' },
+  { value: 'snack', label: '🥨 Перекус' },
+  { value: 'drink', label: '🥤 Напиток' },
+  { value: 'salad', label: '🥗 Салат' },
+  { value: 'soup', label: '🍜 Суп' },
+  { value: 'bakery', label: '🥐 Выпечка' },
+];
+
 interface Recipe {
   id: number;
   title: string;
   description: string;
+  category: string;
   imageUrl?: string;
   likes: number;
   createdAt: string;
@@ -29,7 +43,8 @@ const Profile: React.FC = () => {
   const [editName, setEditName] = useState('');
   const [editEmail, setEditEmail] = useState('');
   const [activeTab, setActiveTab] = useState<'recipes' | 'settings'>('recipes');
-  const [recipes, setRecipes] = useState<Recipe[]>(myRecipes);
+  const [selectedCategory, setSelectedCategory] = useState('all');
+  const [filteredRecipes, setFilteredRecipes] = useState<Recipe[]>(myRecipes);
   const [favoriteStatus, setFavoriteStatus] = useState<{ [key: number]: boolean }>({});
   const [expandedRecipeId, setExpandedRecipeId] = useState<number | null>(null);
   const navigate = useNavigate();
@@ -40,23 +55,28 @@ const Profile: React.FC = () => {
   }, [fetchProfile, fetchMyRecipes]);
 
   useEffect(() => {
-    setRecipes(myRecipes);
-  }, [myRecipes]);
+    // Фильтрация рецептов по категории
+    if (selectedCategory === 'all') {
+      setFilteredRecipes(myRecipes);
+    } else {
+      setFilteredRecipes(myRecipes.filter(recipe => recipe.category === selectedCategory));
+    }
+  }, [myRecipes, selectedCategory]);
 
   useEffect(() => {
     // Проверяем статусы избранного для каждого рецепта
     const checkFavorites = async () => {
       const status: { [key: number]: boolean } = {};
-      for (const recipe of recipes) {
+      for (const recipe of filteredRecipes) {
         status[recipe.id] = await checkFavoriteStatus(recipe.id);
       }
       setFavoriteStatus(status);
     };
 
-    if (recipes.length > 0) {
+    if (filteredRecipes.length > 0) {
       checkFavorites();
     }
-  }, [recipes, checkFavoriteStatus]);
+  }, [filteredRecipes, checkFavoriteStatus]);
 
   useEffect(() => {
     if (profile) {
@@ -64,6 +84,11 @@ const Profile: React.FC = () => {
       setEditEmail(profile.email);
     }
   }, [profile]);
+
+  const getCategoryIcon = (category: string): string => {
+    const cat = CATEGORIES.find(c => c.value === category);
+    return cat ? cat.label.split(' ')[0] : '📝';
+  };
 
   const handleSaveProfile = async (): Promise<void> => {
     try {
@@ -87,7 +112,9 @@ const Profile: React.FC = () => {
         },
       });
 
-      setRecipes(recipes.filter(recipe => recipe.id !== recipeId));
+      // Обновляем локальное состояние
+      const updatedRecipes = filteredRecipes.filter(recipe => recipe.id !== recipeId);
+      setFilteredRecipes(updatedRecipes);
       alert('Рецепт успешно удален');
     } catch (error: any) {
       console.error('Failed to delete recipe:', error);
@@ -100,16 +127,13 @@ const Profile: React.FC = () => {
   };
 
   const handleFavorite = async (recipeId: number, e: React.MouseEvent): Promise<void> => {
-    e.stopPropagation(); // Предотвращаем открытие рецепта при клике на лайк
+    e.stopPropagation();
 
     try {
       if (favoriteStatus[recipeId]) {
-        // Удаляем из избранного
         await removeFromFavorites(recipeId);
         setFavoriteStatus(prev => ({ ...prev, [recipeId]: false }));
-
-        // Обновляем счетчик лайков
-        setRecipes(prevRecipes =>
+        setFilteredRecipes(prevRecipes =>
           prevRecipes.map(recipe =>
             recipe.id === recipeId && recipe.likes > 0
               ? { ...recipe, likes: recipe.likes - 1 }
@@ -117,12 +141,9 @@ const Profile: React.FC = () => {
           ),
         );
       } else {
-        // Добавляем в избранное
         await addToFavorites(recipeId);
         setFavoriteStatus(prev => ({ ...prev, [recipeId]: true }));
-
-        // Обновляем счетчик лайков
-        setRecipes(prevRecipes =>
+        setFilteredRecipes(prevRecipes =>
           prevRecipes.map(recipe =>
             recipe.id === recipeId ? { ...recipe, likes: recipe.likes + 1 } : recipe,
           ),
@@ -172,7 +193,7 @@ const Profile: React.FC = () => {
           className={`tab-button ${activeTab === 'recipes' ? 'active' : ''}`}
           onClick={() => setActiveTab('recipes')}
         >
-          📖 Мои рецепты ({recipes.length})
+          📖 Мои рецепты ({filteredRecipes.length})
         </button>
         <button
           className={`tab-button ${activeTab === 'settings' ? 'active' : ''}`}
@@ -185,17 +206,35 @@ const Profile: React.FC = () => {
       <div className='profile-content'>
         {activeTab === 'recipes' && (
           <div className='recipes-tab'>
-            <h2>Мои рецепты</h2>
-            {recipes.length === 0 ? (
+            <div className='recipes-header'>
+              <h2>Мои рецепты</h2>
+              <div className='category-filters'>
+                {CATEGORIES.map(category => (
+                  <button
+                    key={category.value}
+                    className={`category-filter ${selectedCategory === category.value ? 'active' : ''}`}
+                    onClick={() => setSelectedCategory(category.value)}
+                  >
+                    {category.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {filteredRecipes.length === 0 ? (
               <div className='empty-state'>
-                <p>У вас пока нет рецептов</p>
+                <p>
+                  {selectedCategory === 'all'
+                    ? 'У вас пока нет рецептов'
+                    : `У вас пока нет рецептов в категории "${CATEGORIES.find(c => c.value === selectedCategory)?.label}"`}
+                </p>
                 <a href='/create' className='create-recipe-link'>
-                  Создать первый рецепт
+                  Создать рецепт
                 </a>
               </div>
             ) : (
               <div className='my-recipes-feed'>
-                {recipes.map(recipe => (
+                {filteredRecipes.map(recipe => (
                   <div
                     key={recipe.id}
                     className={`recipe-post ${expandedRecipeId === recipe.id ? 'expanded' : ''}`}
@@ -205,6 +244,12 @@ const Profile: React.FC = () => {
                       <div className='author-info'>
                         <span className='author-name'>{profile?.name}</span>
                         <span className='post-date'>{formatDate(recipe.createdAt)}</span>
+                      </div>
+                      <div className='post-meta'>
+                        <span className='recipe-category'>
+                          {getCategoryIcon(recipe.category)}{' '}
+                          {CATEGORIES.find(c => c.value === recipe.category)?.label.split(' ')[1]}
+                        </span>
                       </div>
                       <div className='post-actions'>
                         <button

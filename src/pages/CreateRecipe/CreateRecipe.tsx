@@ -3,11 +3,24 @@ import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 import './CreateRecipe.css';
 
+const CATEGORIES = [
+  { value: 'breakfast', label: '🍳 Завтрак' },
+  { value: 'lunch', label: '🍲 Обед' },
+  { value: 'dinner', label: '🍽️ Ужин' },
+  { value: 'dessert', label: '🍰 Десерт' },
+  { value: 'snack', label: '🥨 Перекус' },
+  { value: 'drink', label: '🥤 Напиток' },
+  { value: 'salad', label: '🥗 Салат' },
+  { value: 'soup', label: '🍜 Суп' },
+  { value: 'bakery', label: '🥐 Выпечка' },
+];
+
 const CreateRecipe: React.FC = () => {
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [ingredients, setIngredients] = useState('');
   const [instructions, setInstructions] = useState('');
+  const [category, setCategory] = useState('breakfast');
   const [image, setImage] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
@@ -18,7 +31,6 @@ const CreateRecipe: React.FC = () => {
     if (file) {
       setImage(file);
 
-      // Создаем превью изображения
       const reader = new FileReader();
       reader.onloadend = () => {
         setImagePreview(reader.result as string);
@@ -42,6 +54,7 @@ const CreateRecipe: React.FC = () => {
       formData.append('description', description);
       formData.append('ingredients', ingredients);
       formData.append('instructions', instructions);
+      formData.append('category', category);
 
       if (image) {
         formData.append('image', image);
@@ -78,6 +91,23 @@ const CreateRecipe: React.FC = () => {
             onChange={e => setTitle(e.target.value)}
             required
           />
+        </div>
+
+        <div className='form-group'>
+          <label htmlFor='category'>Категория *</label>
+          <select
+            id='category'
+            value={category}
+            onChange={e => setCategory(e.target.value)}
+            required
+            className='category-select'
+          >
+            {CATEGORIES.map(cat => (
+              <option key={cat.value} value={cat.value}>
+                {cat.label}
+              </option>
+            ))}
+          </select>
         </div>
 
         <div className='form-group'>

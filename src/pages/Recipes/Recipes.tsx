@@ -4,12 +4,26 @@ import { useAuthStore } from '../../app/store/authStore';
 import { useFavoriteStore } from '../../app/store/favoriteStore';
 import './Recipes.css';
 
+const CATEGORIES = [
+  { value: 'all', label: '📝 Все рецепты' },
+  { value: 'breakfast', label: '🍳 Завтрак' },
+  { value: 'lunch', label: '🍲 Обед' },
+  { value: 'dinner', label: '🍽️ Ужин' },
+  { value: 'dessert', label: '🍰 Десерт' },
+  { value: 'snack', label: '🥨 Перекус' },
+  { value: 'drink', label: '🥤 Напиток' },
+  { value: 'salad', label: '🥗 Салат' },
+  { value: 'soup', label: '🍜 Суп' },
+  { value: 'bakery', label: '🥐 Выпечка' },
+];
+
 interface Recipe {
   id: number;
   title: string;
   description: string;
   ingredients: string;
   instructions: string;
+  category: string;
   likes: number;
   imageUrl?: string;
   author: {
@@ -21,6 +35,8 @@ interface Recipe {
 
 const Recipes: React.FC = () => {
   const [recipes, setRecipes] = useState<Recipe[]>([]);
+  const [filteredRecipes, setFilteredRecipes] = useState<Recipe[]>([]);
+  const [selectedCategory, setSelectedCategory] = useState('all');
   const [expandedRecipeId, setExpandedRecipeId] = useState<number | null>(null);
   const { user, isAuthenticated } = useAuthStore();
   const { addToFavorites, removeFromFavorites, checkFavoriteStatus } = useFavoriteStore();
@@ -29,6 +45,14 @@ const Recipes: React.FC = () => {
   useEffect(() => {
     fetchRecipes();
   }, []);
+
+  useEffect(() => {
+    if (selectedCategory === 'all') {
+      setFilteredRecipes(recipes);
+    } else {
+      setFilteredRecipes(recipes.filter(recipe => recipe.category === selectedCategory));
+    }
+  }, [recipes, selectedCategory]);
 
   useEffect(() => {
     if (!isAuthenticated) {
@@ -53,6 +77,11 @@ const Recipes: React.FC = () => {
 
     checkFavorites();
   }, [recipes, checkFavoriteStatus, isAuthenticated]);
+
+  const getCategoryIcon = (category: string): string => {
+    const cat = CATEGORIES.find(c => c.value === category);
+    return cat ? cat.label.split(' ')[0] : '📝';
+  };
 
   const fetchRecipes = async (): Promise<void> => {
     try {
@@ -148,77 +177,105 @@ const Recipes: React.FC = () => {
 
   return (
     <div className='recipes-container'>
-      <h2>Лента рецептов</h2>
+      <div className='recipes-header'>
+        <h2>Лента рецептов</h2>
+        <div className='category-filters'>
+          {CATEGORIES.map(category => (
+            <button
+              key={category.value}
+              className={`category-filter ${selectedCategory === category.value ? 'active' : ''}`}
+              onClick={() => setSelectedCategory(category.value)}
+            >
+              {category.label}
+            </button>
+          ))}
+        </div>
+      </div>
+
       <div className='recipes-feed'>
-        {recipes.map(recipe => (
-          <div key={recipe.id} className='recipe-post'>
-            <div className='post-header'>
-              <div className='author-info'>
-                <span className='author-name'>{recipe.author.name}</span>
-                <span className='post-date'>{formatDate(recipe.createdAt)}</span>
-              </div>
-              <div className='post-actions'>
-                <button
-                  className={`like-btn ${favoriteStatus[recipe.id] ? 'liked' : ''}`}
-                  onClick={() => handleLike(recipe.id)}
-                  title={
-                    favoriteStatus[recipe.id] ? 'Удалить из избранного' : 'Добавить в избранное'
-                  }
-                >
-                  {favoriteStatus[recipe.id] ? '❤️' : '🤍'} {recipe.likes}
-                </button>
-                {isUserAuthor(recipe.author.id) && (
+        {filteredRecipes.map(
+          (
+            recipe, // Исправлено: используем filteredRecipes вместо recipes
+          ) => (
+            <div key={recipe.id} className='recipe-post'>
+              <div className='post-header'>
+                <div className='author-info'>
+                  <span className='author-name'>{recipe.author.name}</span>
+                  <span className='post-date'>{formatDate(recipe.createdAt)}</span>
+                </div>
+                <div className='post-meta'>
+                  <span className='recipe-category'>
+                    {getCategoryIcon(recipe.category)}{' '}
+                    {CATEGORIES.find(c => c.value === recipe.category)?.label.split(' ')[1]}
+                  </span>
+                </div>
+                <div className='post-actions'>
                   <button
-                    className='delete-btn'
-                    onClick={() => deleteRecipe(recipe.id)}
-                    title='Удалить рецепт'
+                    className={`like-btn ${favoriteStatus[recipe.id] ? 'liked' : ''}`}
+                    onClick={() => handleLike(recipe.id)}
+                    title={
+                      isAuthenticated
+                        ? favoriteStatus[recipe.id]
+                          ? 'Удалить из избранного'
+                          : 'Добавить в избранное'
+                        : 'Войдите чтобы добавить в избранное'
+                    }
                   >
-                    🗑️
+                    {favoriteStatus[recipe.id] ? '❤️' : '🤍'} {recipe.likes}
                   </button>
+                  {isUserAuthor(recipe.author.id) && (
+                    <button
+                      className='delete-btn'
+                      onClick={() => deleteRecipe(recipe.id)}
+                      title='Удалить рецепт'
+                    >
+                      🗑️
+                    </button>
+                  )}
+                </div>
+              </div>
+
+              <div className='post-content'>
+                <h3 className='recipe-title' onClick={() => toggleRecipe(recipe.id)}>
+                  {recipe.title}
+                  <span className='expand-icon'>{expandedRecipeId === recipe.id ? '▼' : '▶'}</span>
+                </h3>
+
+                <p className='recipe-description'>{recipe.description}</p>
+
+                {recipe.imageUrl && (
+                  <div className='recipe-image-container'>
+                    <div className='recipe-image'>
+                      <img src={`http://localhost:5000${recipe.imageUrl}`} alt={recipe.title} />
+                    </div>
+                  </div>
+                )}
+
+                {expandedRecipeId === recipe.id && (
+                  <div className='recipe-details'>
+                    <div className='ingredients-section'>
+                      <h4>Ингредиенты:</h4>
+                      <ul className='ingredients-list'>
+                        {recipe.ingredients.split('\n').map((ingredient, index) => (
+                          <li key={index}>{ingredient.trim()}</li>
+                        ))}
+                      </ul>
+                    </div>
+
+                    <div className='instructions-section'>
+                      <h4>Приготовление:</h4>
+                      <ol className='instructions-list'>
+                        {recipe.instructions.split('\n').map((instruction, index) => (
+                          <li key={index}>{instruction.trim()}</li>
+                        ))}
+                      </ol>
+                    </div>
+                  </div>
                 )}
               </div>
             </div>
-
-            <div className='post-content'>
-              <h3 className='recipe-title' onClick={() => toggleRecipe(recipe.id)}>
-                {recipe.title}
-                <span className='expand-icon'>{expandedRecipeId === recipe.id ? '▼' : '▶'}</span>
-              </h3>
-
-              <p className='recipe-description'>{recipe.description}</p>
-
-              {recipe.imageUrl && (
-                <div className='recipe-image-container'>
-                  <div className='recipe-image'>
-                    <img src={`http://localhost:5000${recipe.imageUrl}`} alt={recipe.title} />
-                  </div>
-                </div>
-              )}
-
-              {expandedRecipeId === recipe.id && (
-                <div className='recipe-details'>
-                  <div className='ingredients-section'>
-                    <h4>Ингредиенты:</h4>
-                    <ul className='ingredients-list'>
-                      {recipe.ingredients.split('\n').map((ingredient, index) => (
-                        <li key={index}>{ingredient.trim()}</li>
-                      ))}
-                    </ul>
-                  </div>
-
-                  <div className='instructions-section'>
-                    <h4>Приготовление:</h4>
-                    <ol className='instructions-list'>
-                      {recipe.instructions.split('\n').map((instruction, index) => (
-                        <li key={index}>{instruction.trim()}</li>
-                      ))}
-                    </ol>
-                  </div>
-                </div>
-              )}
-            </div>
-          </div>
-        ))}
+          ),
+        )}
       </div>
     </div>
   );

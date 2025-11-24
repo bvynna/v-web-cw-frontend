@@ -4,6 +4,7 @@ import axios from 'axios';
 interface Recipe {
   instructions: string;
   ingredients: string;
+  category: string;
   id: number;
   title: string;
   description: string;
