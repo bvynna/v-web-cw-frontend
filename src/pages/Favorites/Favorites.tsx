@@ -36,20 +36,38 @@ const Favorites: React.FC = () => {
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [filteredFavorites, setFilteredFavorites] = useState<Recipe[]>(favorites);
   const [expandedRecipeId, setExpandedRecipeId] = useState<number | null>(null);
+  const [searchQuery, setSearchQuery] = useState('');
 
   useEffect(() => {
     fetchFavorites();
   }, [fetchFavorites]);
 
   useEffect(() => {
-    // Фильтрация избранных рецептов по категории
-    if (selectedCategory === 'all') {
-      setFilteredFavorites(favorites);
-    } else {
-      setFilteredFavorites(favorites.filter(recipe => recipe.category === selectedCategory));
-    }
-  }, [favorites, selectedCategory]);
+    let result = favorites;
 
+    if (selectedCategory !== 'all') {
+      result = result.filter(recipe => recipe.category === selectedCategory);
+    }
+
+    if (searchQuery.trim()) {
+      const query = searchQuery.toLowerCase().trim();
+      result = result.filter(
+        recipe =>
+          recipe.title.toLowerCase().includes(query) ||
+          recipe.description.toLowerCase().includes(query),
+      );
+    }
+
+    setFilteredFavorites(result);
+  }, [favorites, selectedCategory, searchQuery]);
+
+  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>): void => {
+    setSearchQuery(e.target.value);
+  };
+
+  const clearSearch = (): void => {
+    setSearchQuery('');
+  };
   const getCategoryIcon = (category: string): string => {
     const cat = CATEGORIES.find(c => c.value === category);
     return cat ? cat.label.split(' ')[0] : '📝';
@@ -98,6 +116,27 @@ const Favorites: React.FC = () => {
         </div>
       ) : (
         <>
+          <div className='search-container'>
+            <div className='search-input-wrapper'>
+              <input
+                type='text'
+                placeholder='🔍 Поиск в избранном...'
+                value={searchQuery}
+                onChange={handleSearchChange}
+                className='search-input'
+              />
+              {searchQuery && (
+                <button className='clear-search-btn' onClick={clearSearch} title='Очистить поиск'>
+                  ✕
+                </button>
+              )}
+            </div>
+            {searchQuery && (
+              <div className='search-results-info'>
+                Найдено рецептов: {filteredFavorites.length}
+              </div>
+            )}
+          </div>
           <div className='category-filters'>
             {CATEGORIES.map(category => (
               <button
