@@ -86,4 +86,10 @@ export const useProfileStore = create<ProfileState>((set, get) => ({
   clearProfile: (): void => {
     set({ profile: null, myRecipes: [] });
   },
+  removeRecipe: (recipeId: number) => {
+    const { myRecipes } = get();
+    set({
+      myRecipes: myRecipes.filter(recipe => recipe.id !== recipeId),
+    });
+  },
 }));
