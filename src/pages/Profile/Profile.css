@@ -325,6 +325,233 @@
   margin-top: 0.5rem;
 }
 
+.my-recipes-feed {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.recipe-post {
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  border: 1px solid #e0e0e0;
+  transition: all 0.3s ease;
+  overflow: hidden;
+  cursor: pointer;
+}
+
+.recipe-post:hover {
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+  transform: translateY(-2px);
+}
+
+.recipe-post.expanded {
+  border-color: #3498db;
+  box-shadow: 0 4px 25px rgba(52, 152, 219, 0.2);
+}
+
+.post-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem 1.5rem;
+  background-color: #f8f9fa;
+  border-bottom: 1px solid #e9ecef;
+}
+
+.author-info {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.author-name {
+  font-weight: 600;
+  color: #333;
+  font-size: 1rem;
+}
+
+.post-date {
+  font-size: 0.85rem;
+  color: #6c757d;
+}
+
+.post-actions {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.like-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 1rem;
+  padding: 0.5rem 0.75rem;
+  border-radius: 20px;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  border: 1px solid #e0e0e0;
+}
+
+.like-btn:hover {
+  background-color: #fff0f0;
+  transform: scale(1.05);
+}
+
+.like-btn.liked {
+  background-color: #ffe6e6;
+  border-color: #ffcccc;
+  color: #e74c3c;
+}
+
+.delete-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 1.1rem;
+  padding: 0.5rem;
+  border-radius: 4px;
+  transition: all 0.3s ease;
+  opacity: 0.7;
+}
+
+.delete-btn:hover {
+  opacity: 1;
+  background-color: #ffe6e6;
+  transform: scale(1.1);
+}
+
+.post-content {
+  padding: 1.5rem;
+}
+
+.recipe-title {
+  margin: 0 0 1rem 0;
+  color: #2c3e50;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 1.25rem;
+  transition: color 0.3s ease;
+}
+
+.recipe-title:hover {
+  color: #3498db;
+}
+
+.expand-icon {
+  font-size: 0.8rem;
+  color: #6c757d;
+  transition: transform 0.3s ease;
+}
+
+.recipe-description {
+  color: #555;
+  line-height: 1.6;
+  margin-bottom: 1rem;
+  font-size: 0.95rem;
+}
+
+.recipe-image-container {
+  max-width: 500px;
+  margin: 1rem auto;
+}
+
+.recipe-image {
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  border-radius: 8px;
+  overflow: hidden;
+  background-color: #f8f9fa;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.recipe-image img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 8px;
+  transition: transform 0.3s ease;
+}
+
+.recipe-post:hover .recipe-image img {
+  transform: scale(1.02);
+}
+
+.recipe-details {
+  margin-top: 1.5rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid #e9ecef;
+  animation: slideDown 0.3s ease-out;
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.ingredients-section,
+.instructions-section {
+  margin-bottom: 1.5rem;
+}
+
+.ingredients-section h4,
+.instructions-section h4 {
+  color: #2c3e50;
+  margin-bottom: 0.75rem;
+  font-size: 1.1rem;
+}
+
+.ingredients-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.ingredients-list li {
+  padding: 0.5rem 0;
+  border-bottom: 1px solid #f8f9fa;
+  color: #555;
+  position: relative;
+  padding-left: 1.5rem;
+}
+
+.ingredients-list li:before {
+  content: '•';
+  color: #3498db;
+  font-weight: bold;
+  position: absolute;
+  left: 0.5rem;
+}
+
+.instructions-list {
+  padding-left: 1.5rem;
+  margin: 0;
+}
+
+.instructions-list li {
+  padding: 0.5rem 0;
+  color: #555;
+  line-height: 1.6;
+  border-bottom: 1px solid #f8f9fa;
+}
+
+.instructions-list li:last-child {
+  border-bottom: none;
+}
+
 @media (max-width: 768px) {
   .profile-header {
     flex-direction: column;
@@ -349,5 +576,32 @@
   }
   .recipe-content {
     padding: 1rem;
+  }
+  .my-recipes-feed {
+    gap: 1rem;
+  }
+
+  .post-header {
+    padding: 0.75rem 1rem;
+    flex-direction: column;
+    gap: 0.5rem;
+    align-items: flex-start;
+  }
+
+  .post-actions {
+    width: 100%;
+    justify-content: space-between;
+  }
+
+  .post-content {
+    padding: 1rem;
+  }
+
+  .recipe-title {
+    font-size: 1.1rem;
+  }
+
+  .recipe-image-container {
+    max-width: 100%;
   }
 }

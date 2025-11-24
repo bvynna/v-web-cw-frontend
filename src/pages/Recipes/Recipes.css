@@ -59,7 +59,7 @@
 .post-actions {
   display: flex;
   align-items: center;
-  gap: 1rem;
+  gap: 0.75rem;
 }
 
 .likes-count {
@@ -206,6 +206,31 @@
 
 .instructions-list li:last-child {
   border-bottom: none;
+}
+
+.like-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 1rem;
+  padding: 0.5rem 0.75rem;
+  border-radius: 20px;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  border: 1px solid #e0e0e0;
+}
+
+.like-btn:hover {
+  background-color: #fff0f0;
+  transform: scale(1.05);
+}
+
+.like-btn.liked {
+  background-color: #ffe6e6;
+  border-color: #ffcccc;
+  color: #e74c3c;
 }
 
 /* Адаптивность */

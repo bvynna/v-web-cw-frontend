@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { useAuthStore } from '../../app/store/authStore';
+import { useFavoriteStore } from '../../app/store/favoriteStore';
 import './Recipes.css';
 
 interface Recipe {
@@ -22,10 +23,27 @@ const Recipes: React.FC = () => {
   const [recipes, setRecipes] = useState<Recipe[]>([]);
   const [expandedRecipeId, setExpandedRecipeId] = useState<number | null>(null);
   const { user } = useAuthStore();
+  const { addToFavorites, removeFromFavorites, checkFavoriteStatus } = useFavoriteStore();
+  const [favoriteStatus, setFavoriteStatus] = useState<{ [key: number]: boolean }>({});
 
   useEffect(() => {
     fetchRecipes();
   }, []);
+
+  useEffect(() => {
+    // Проверяем статус избранного для каждого рецепта
+    const checkFavorites = async () => {
+      const status: { [key: number]: boolean } = {};
+      for (const recipe of recipes) {
+        status[recipe.id] = await checkFavoriteStatus(recipe.id);
+      }
+      setFavoriteStatus(status);
+    };
+
+    if (recipes.length > 0) {
+      checkFavorites();
+    }
+  }, [recipes, checkFavoriteStatus]);
 
   const fetchRecipes = async (): Promise<void> => {
     try {
@@ -53,7 +71,6 @@ const Recipes: React.FC = () => {
         },
       });
 
-      // Удаляем рецепт из состояния
       setRecipes(recipes.filter(recipe => recipe.id !== recipeId));
       alert('Рецепт успешно удален');
     } catch (error: any) {
@@ -62,6 +79,43 @@ const Recipes: React.FC = () => {
         alert('Вы можете удалять только свои рецепты');
       } else {
         alert('Ошибка при удалении рецепта');
+      }
+    }
+  };
+
+  const handleLike = async (recipeId: number): Promise<void> => {
+    try {
+      if (favoriteStatus[recipeId]) {
+        // Удаляем из избранного
+        await removeFromFavorites(recipeId);
+        setFavoriteStatus(prev => ({ ...prev, [recipeId]: false }));
+
+        // Обновляем счетчик лайков
+        setRecipes(prevRecipes =>
+          prevRecipes.map(recipe =>
+            recipe.id === recipeId && recipe.likes > 0
+              ? { ...recipe, likes: recipe.likes - 1 }
+              : recipe,
+          ),
+        );
+      } else {
+        // Добавляем в избранное
+        await addToFavorites(recipeId);
+        setFavoriteStatus(prev => ({ ...prev, [recipeId]: true }));
+
+        // Обновляем счетчик лайков
+        setRecipes(prevRecipes =>
+          prevRecipes.map(recipe =>
+            recipe.id === recipeId ? { ...recipe, likes: recipe.likes + 1 } : recipe,
+          ),
+        );
+      }
+    } catch (error: any) {
+      console.error('Failed to toggle favorite:', error);
+      if (error.response?.status === 400) {
+        alert('Рецепт уже в избранном');
+      } else {
+        alert('Ошибка при добавлении в избранное');
       }
     }
   };
@@ -90,7 +144,15 @@ const Recipes: React.FC = () => {
                 <span className='post-date'>{formatDate(recipe.createdAt)}</span>
               </div>
               <div className='post-actions'>
-                <div className='likes-count'>❤️ {recipe.likes}</div>
+                <button
+                  className={`like-btn ${favoriteStatus[recipe.id] ? 'liked' : ''}`}
+                  onClick={() => handleLike(recipe.id)}
+                  title={
+                    favoriteStatus[recipe.id] ? 'Удалить из избранного' : 'Добавить в избранное'
+                  }
+                >
+                  {favoriteStatus[recipe.id] ? '❤️' : '🤍'} {recipe.likes}
+                </button>
                 {isUserAuthor(recipe.author.id) && (
                   <button
                     className='delete-btn'
@@ -114,13 +176,7 @@ const Recipes: React.FC = () => {
               {recipe.imageUrl && (
                 <div className='recipe-image-container'>
                   <div className='recipe-image'>
-                    <img
-                      src={`http://localhost:5000${recipe.imageUrl}`}
-                      alt={recipe.title}
-                      onError={e => {
-                        (e.target as HTMLImageElement).style.display = 'none';
-                      }}
-                    />
+                    <img src={`http://localhost:5000${recipe.imageUrl}`} alt={recipe.title} />
                   </div>
                 </div>
               )}

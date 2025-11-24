@@ -9,6 +9,7 @@ import Register from './pages/Auth/Register';
 import Recipes from './pages/Recipes/Recipes';
 import CreateRecipe from './pages/CreateRecipe/CreateRecipe';
 import Profile from './pages/Profile/Profile';
+import Favorites from './pages/Favorites/Favorites';
 
 function App() {
   const { isAuthenticated, isLoading, checkAuth } = useAuthStore();
@@ -36,6 +37,10 @@ function App() {
           <Route
             path='/create'
             element={isAuthenticated ? <CreateRecipe /> : <Navigate to='/login' />}
+          />
+          <Route
+            path='/favorites'
+            element={isAuthenticated ? <Favorites /> : <Navigate to='/login' />}
           />
         </Routes>
       </div>
