@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useProfileStore } from '../../app/store/profileStore';
 import { useAuthStore } from '../../app/store/authStore';
 import { useFavoriteStore } from '../../app/store/favoriteStore';
+import { useCommentStore } from '../../app/store/commentStore'; // Добавьте этот импорт
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 import './Profile.css';
@@ -26,6 +27,7 @@ interface Recipe {
   category: string;
   imageUrl?: string;
   likes: number;
+  commentCount: number;
   createdAt: string;
   author: {
     id: number;
@@ -37,7 +39,7 @@ interface Recipe {
 const Profile: React.FC = () => {
   const { profile, myRecipes, isLoading, fetchProfile, fetchMyRecipes, updateProfile } =
     useProfileStore();
-  const { user } = useAuthStore();
+  const { user, isAuthenticated } = useAuthStore(); // Добавьте isAuthenticated
   const { addToFavorites, removeFromFavorites, checkFavoriteStatus } = useFavoriteStore();
   const [isEditing, setIsEditing] = useState(false);
   const [editName, setEditName] = useState('');
@@ -48,6 +50,15 @@ const Profile: React.FC = () => {
   const [favoriteStatus, setFavoriteStatus] = useState<{ [key: number]: boolean }>({});
   const [expandedRecipeId, setExpandedRecipeId] = useState<number | null>(null);
   const navigate = useNavigate();
+  const [showComments, setShowComments] = useState<number | null>(null);
+  const [newComment, setNewComment] = useState('');
+  const {
+    comments,
+    isLoading: commentsLoading,
+    fetchComments,
+    addComment,
+    deleteComment,
+  } = useCommentStore();
 
   useEffect(() => {
     fetchProfile();
@@ -84,6 +95,49 @@ const Profile: React.FC = () => {
       setEditEmail(profile.email);
     }
   }, [profile]);
+
+  const toggleComments = async (recipeId: number): Promise<void> => {
+    if (showComments === recipeId) {
+      setShowComments(null);
+    } else {
+      setShowComments(recipeId);
+      await fetchComments(recipeId);
+    }
+  };
+
+  const handleAddComment = async (recipeId: number, e: React.FormEvent): Promise<void> => {
+    e.preventDefault();
+    if (!newComment.trim()) return;
+
+    try {
+      await addComment(recipeId, newComment.trim());
+      setNewComment('');
+      fetchMyRecipes();
+    } catch (error) {
+      alert('Ошибка при добавлении комментария');
+    }
+  };
+
+  const handleDeleteComment = async (recipeId: number, commentId: number): Promise<void> => {
+    if (!window.confirm('Удалить комментарий?')) return;
+
+    try {
+      await deleteComment(recipeId, commentId);
+      fetchMyRecipes();
+    } catch (error) {
+      alert('Ошибка при удалении комментария');
+    }
+  };
+
+  const formatCommentDate = (dateString: string): string => {
+    return new Date(dateString).toLocaleDateString('ru-RU', {
+      day: 'numeric',
+      month: 'short',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+    });
+  };
 
   const getCategoryIcon = (category: string): string => {
     const cat = CATEGORIES.find(c => c.value === category);
@@ -253,6 +307,16 @@ const Profile: React.FC = () => {
                       </div>
                       <div className='post-actions'>
                         <button
+                          className='comments-btn'
+                          onClick={e => {
+                            e.stopPropagation();
+                            toggleComments(recipe.id);
+                          }}
+                          title='Комментарии'
+                        >
+                          💬 {recipe.commentCount || 0}
+                        </button>
+                        <button
                           className={`like-btn ${favoriteStatus[recipe.id] ? 'liked' : ''}`}
                           onClick={e => handleFavorite(recipe.id, e)}
                           title={
@@ -315,6 +379,60 @@ const Profile: React.FC = () => {
                                 <li key={index}>{instruction.trim()}</li>
                               ))}
                             </ol>
+                          </div>
+                        </div>
+                      )}
+                      {showComments === recipe.id && (
+                        <div className='comments-section'>
+                          <h4>Комментарии ({comments[recipe.id]?.length || 0})</h4>
+
+                          {isAuthenticated ? (
+                            <form
+                              onSubmit={e => handleAddComment(recipe.id, e)}
+                              className='comment-form'
+                            >
+                              <textarea
+                                placeholder='Напишите комментарий...'
+                                value={newComment}
+                                onChange={e => setNewComment(e.target.value)}
+                                rows={3}
+                                required
+                              />
+                              <button type='submit' disabled={!newComment.trim()}>
+                                Отправить
+                              </button>
+                            </form>
+                          ) : (
+                            <p className='login-to-comment'>Войдите, чтобы оставить комментарий</p>
+                          )}
+
+                          <div className='comments-list'>
+                            {commentsLoading ? (
+                              <div className='loading'>Загрузка комментариев...</div>
+                            ) : comments[recipe.id]?.length > 0 ? (
+                              comments[recipe.id].map(comment => (
+                                <div key={comment.id} className='comment'>
+                                  <div className='comment-header'>
+                                    <span className='comment-author'>{comment.author.name}</span>
+                                    <span className='comment-date'>
+                                      {formatCommentDate(comment.createdAt)}
+                                    </span>
+                                    {user?.id === comment.author.id && (
+                                      <button
+                                        className='delete-comment-btn'
+                                        onClick={() => handleDeleteComment(recipe.id, comment.id)}
+                                        title='Удалить комментарий'
+                                      >
+                                        🗑️
+                                      </button>
+                                    )}
+                                  </div>
+                                  <p className='comment-content'>{comment.content}</p>
+                                </div>
+                              ))
+                            ) : (
+                              <p className='no-comments'>Пока нет комментариев</p>
+                            )}
                           </div>
                         </div>
                       )}

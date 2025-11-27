@@ -19,6 +19,7 @@ interface Recipe {
   instructions: string;
   imageUrl?: string;
   likes: number;
+  commentCount: number;
   createdAt: string;
   author: {
     id: number;

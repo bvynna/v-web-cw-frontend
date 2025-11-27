@@ -37,6 +37,7 @@ interface Recipe {
   instructions: string;
   category: string;
   likes: number;
+  commentCount: number;
   imageUrl?: string;
   author: {
     id: number;
@@ -331,7 +332,7 @@ const Recipes: React.FC = () => {
                     onClick={() => toggleComments(recipe.id)}
                     title='Комментарии'
                   >
-                    💬 {comments[recipe.id]?.length || 0}
+                    💬 {recipe.commentCount || 0}
                   </button>
                   <button
                     className={`like-btn ${favoriteStatus[recipe.id] ? 'liked' : ''}`}
