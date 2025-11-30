@@ -43,6 +43,10 @@ const UserProfile: React.FC = () => {
   const [expandedRecipeId, setExpandedRecipeId] = useState<number | null>(null);
 
   useEffect(() => {
+    window.scrollTo(0, 0);
+  }, [userId]);
+
+  useEffect(() => {
     fetchUserProfile();
   }, [userId]);
 

@@ -473,7 +473,29 @@ const Recipes: React.FC = () => {
                         comments[recipe.id].map(comment => (
                           <div key={comment.id} className='comment'>
                             <div className='comment-header'>
-                              <span className='comment-author'>{comment.author.name}</span>
+                              <span
+                                className='comment-author'
+                                onClick={e => {
+                                  e.stopPropagation();
+                                  if (comment.author.id !== currentUser?.id) {
+                                    navigate(`/user/${comment.author.id}`);
+                                  } else {
+                                    navigate('/profile');
+                                  }
+                                }}
+                                style={{
+                                  cursor: 'pointer',
+                                  color: '#007bff',
+                                  fontWeight: '600',
+                                }}
+                                title={
+                                  comment.author.id !== currentUser?.id
+                                    ? 'Посмотреть профиль'
+                                    : 'Перейти в мой профиль'
+                                }
+                              >
+                                {comment.author.name}
+                              </span>
                               <span className='comment-date'>
                                 {formatCommentDate(comment.createdAt)}
                               </span>
@@ -534,7 +556,29 @@ const Recipes: React.FC = () => {
                                 {comment.replies.map(reply => (
                                   <div key={reply.id} className='comment reply'>
                                     <div className='comment-header'>
-                                      <span className='comment-author'>{reply.author.name}</span>
+                                      <span
+                                        className='comment-author'
+                                        onClick={e => {
+                                          e.stopPropagation();
+                                          if (reply.author.id !== currentUser?.id) {
+                                            navigate(`/user/${reply.author.id}`);
+                                          } else {
+                                            navigate('/profile');
+                                          }
+                                        }}
+                                        style={{
+                                          cursor: 'pointer',
+                                          color: '#007bff',
+                                          fontWeight: '600',
+                                        }}
+                                        title={
+                                          reply.author.id !== currentUser?.id
+                                            ? 'Посмотреть профиль'
+                                            : 'Перейти в мой профиль'
+                                        }
+                                      >
+                                        {reply.author.name}
+                                      </span>
                                       <span className='comment-date'>
                                         {formatCommentDate(reply.createdAt)}
                                       </span>
