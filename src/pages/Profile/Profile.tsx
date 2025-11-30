@@ -114,6 +114,11 @@ const Profile: React.FC = () => {
       await addReply(recipeId, parentCommentId, replyContent.trim());
       setReplyContent('');
       setReplyingTo(null);
+      setFilteredRecipes(prevRecipes =>
+        prevRecipes.map(recipe =>
+          recipe.id === recipeId ? { ...recipe, commentCount: recipe.commentCount + 1 } : recipe,
+        ),
+      );
     } catch (error) {
       alert('Ошибка при добавлении ответа');
     }
@@ -135,7 +140,11 @@ const Profile: React.FC = () => {
     try {
       await addComment(recipeId, newComment.trim());
       setNewComment('');
-      fetchMyRecipes();
+      setFilteredRecipes(prevRecipes =>
+        prevRecipes.map(recipe =>
+          recipe.id === recipeId ? { ...recipe, commentCount: recipe.commentCount + 1 } : recipe,
+        ),
+      );
     } catch (error) {
       alert('Ошибка при добавлении комментария');
     }

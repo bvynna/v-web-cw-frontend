@@ -93,6 +93,8 @@ export const useCommentStore = create<CommentState>((set, get) => ({
           };
         }
       });
+
+      return response.data;
     } catch (error: any) {
       console.error('Failed to add comment:', error);
       throw error;

@@ -93,6 +93,11 @@ const Favorites: React.FC = () => {
       await addReply(recipeId, parentCommentId, replyContent.trim());
       setReplyContent('');
       setReplyingTo(null);
+      setFilteredFavorites(prevFavorites =>
+        prevFavorites.map(recipe =>
+          recipe.id === recipeId ? { ...recipe, commentCount: recipe.commentCount + 1 } : recipe,
+        ),
+      );
     } catch (error) {
       alert('Ошибка при добавлении ответа');
     }
@@ -132,7 +137,11 @@ const Favorites: React.FC = () => {
     try {
       await addComment(recipeId, newComment.trim());
       setNewComment('');
-      fetchFavorites(); // Обновляем избранное чтобы обновить счетчик комментариев
+      setFilteredFavorites(prevFavorites =>
+        prevFavorites.map(recipe =>
+          recipe.id === recipeId ? { ...recipe, commentCount: recipe.commentCount + 1 } : recipe,
+        ),
+      );
     } catch (error) {
       alert('Ошибка при добавлении комментария');
     }
@@ -143,7 +152,7 @@ const Favorites: React.FC = () => {
 
     try {
       await deleteComment(recipeId, commentId);
-      fetchFavorites(); // Обновляем избранное чтобы обновить счетчик комментариев
+      fetchFavorites();
     } catch (error) {
       alert('Ошибка при удалении комментария');
     }
