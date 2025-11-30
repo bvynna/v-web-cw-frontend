@@ -210,40 +210,8 @@ const Favorites: React.FC = () => {
           <div className='favorites-feed'>
             {filteredFavorites.map(recipe => (
               <div key={recipe.id} className='recipe-post favorite-post'>
-                <div className='post-header'>
-                  <div className='author-info'>
-                    <span className='author-name'>{recipe.author.name}</span>
-                    <span className='post-date'>{formatDate(recipe.createdAt)}</span>
-                  </div>
-                  <div className='post-meta'>
-                    <span className='recipe-category'>
-                      {getCategoryIcon(recipe.category)}{' '}
-                      {CATEGORIES.find(c => c.value === recipe.category)?.label.split(' ')[1]}
-                    </span>
-                  </div>
-                  <div className='post-actions'>
-                    <button
-                      className='comments-btn'
-                      onClick={e => {
-                        e.stopPropagation();
-                        toggleComments(recipe.id);
-                      }}
-                      title='Комментарии'
-                    >
-                      💬 {recipe.commentCount || 0}
-                    </button>
-                    <div className='likes-count'>❤️ {recipe.likes}</div>
-                    <button
-                      className='remove-favorite-btn'
-                      onClick={() => handleRemoveFavorite(recipe.id)}
-                      title='Удалить из избранного'
-                    >
-                      ❌
-                    </button>
-                  </div>
-                </div>
-
                 <div className='post-content'>
+                  {/* Название и описание вверху */}
                   <h3 className='recipe-title' onClick={() => toggleRecipe(recipe.id)}>
                     {recipe.title}
                     <span className='expand-icon'>
@@ -253,6 +221,7 @@ const Favorites: React.FC = () => {
 
                   <p className='recipe-description'>{recipe.description}</p>
 
+                  {/* Фотография */}
                   {recipe.imageUrl && (
                     <div className='recipe-image-container'>
                       <div className='recipe-image'>
@@ -261,6 +230,40 @@ const Favorites: React.FC = () => {
                     </div>
                   )}
 
+                  {/* Шапка с информацией и действиями под фото */}
+                  <div className='post-header'>
+                    <div className='author-info'>
+                      <span className='author-name'>{recipe.author.name}</span>
+                      <span className='post-date'>{formatDate(recipe.createdAt)}</span>
+                    </div>
+                    <div className='post-meta'>
+                      <span className='recipe-category'>
+                        {getCategoryIcon(recipe.category)}{' '}
+                        {CATEGORIES.find(c => c.value === recipe.category)?.label.split(' ')[1]}
+                      </span>
+                    </div>
+                    <div className='post-actions'>
+                      <button
+                        className='like-btn liked'
+                        onClick={() => handleRemoveFavorite(recipe.id)}
+                        title='Удалить из избранного'
+                      >
+                        ❤️ {recipe.likes}
+                      </button>
+                      <button
+                        className='comments-btn'
+                        onClick={e => {
+                          e.stopPropagation();
+                          toggleComments(recipe.id);
+                        }}
+                        title='Комментарии'
+                      >
+                        💬 {recipe.commentCount || 0}
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Детали рецепта при раскрытии */}
                   {expandedRecipeId === recipe.id && (
                     <div className='recipe-details'>
                       <div className='ingredients-section'>
@@ -283,7 +286,7 @@ const Favorites: React.FC = () => {
                     </div>
                   )}
 
-                  {/* Добавьте блок комментариев */}
+                  {/* Комментарии */}
                   {showComments === recipe.id && (
                     <div className='comments-section'>
                       <h4>Комментарии ({comments[recipe.id]?.length || 0})</h4>

@@ -289,59 +289,10 @@ const Profile: React.FC = () => {
             ) : (
               <div className='my-recipes-feed'>
                 {filteredRecipes.map(recipe => (
-                  <div
-                    key={recipe.id}
-                    className={`recipe-post ${expandedRecipeId === recipe.id ? 'expanded' : ''}`}
-                    onClick={() => openRecipe(recipe.id)}
-                  >
-                    <div className='post-header'>
-                      <div className='author-info'>
-                        <span className='author-name'>{profile?.name}</span>
-                        <span className='post-date'>{formatDate(recipe.createdAt)}</span>
-                      </div>
-                      <div className='post-meta'>
-                        <span className='recipe-category'>
-                          {getCategoryIcon(recipe.category)}{' '}
-                          {CATEGORIES.find(c => c.value === recipe.category)?.label.split(' ')[1]}
-                        </span>
-                      </div>
-                      <div className='post-actions'>
-                        <button
-                          className='comments-btn'
-                          onClick={e => {
-                            e.stopPropagation();
-                            toggleComments(recipe.id);
-                          }}
-                          title='Комментарии'
-                        >
-                          💬 {recipe.commentCount || 0}
-                        </button>
-                        <button
-                          className={`like-btn ${favoriteStatus[recipe.id] ? 'liked' : ''}`}
-                          onClick={e => handleFavorite(recipe.id, e)}
-                          title={
-                            favoriteStatus[recipe.id]
-                              ? 'Удалить из избранного'
-                              : 'Добавить в избранное'
-                          }
-                        >
-                          {favoriteStatus[recipe.id] ? '❤️' : '🤍'} {recipe.likes}
-                        </button>
-                        <button
-                          className='delete-btn'
-                          onClick={e => {
-                            e.stopPropagation();
-                            deleteRecipe(recipe.id);
-                          }}
-                          title='Удалить рецепт'
-                        >
-                          🗑️
-                        </button>
-                      </div>
-                    </div>
-
+                  <div key={recipe.id} className='recipe-post'>
                     <div className='post-content'>
-                      <h3 className='recipe-title'>
+                      {/* Название и описание вверху */}
+                      <h3 className='recipe-title' onClick={() => openRecipe(recipe.id)}>
                         {recipe.title}
                         <span className='expand-icon'>
                           {expandedRecipeId === recipe.id ? '▼' : '▶'}
@@ -350,6 +301,7 @@ const Profile: React.FC = () => {
 
                       <p className='recipe-description'>{recipe.description}</p>
 
+                      {/* Фотография */}
                       {recipe.imageUrl && (
                         <div className='recipe-image-container'>
                           <div className='recipe-image'>
@@ -361,6 +313,54 @@ const Profile: React.FC = () => {
                         </div>
                       )}
 
+                      {/* Шапка с информацией и действиями под фото */}
+                      <div className='post-header'>
+                        <div className='author-info'>
+                          <span className='author-name'>{profile?.name}</span>
+                          <span className='post-date'>{formatDate(recipe.createdAt)}</span>
+                        </div>
+                        <div className='post-meta'>
+                          <span className='recipe-category'>
+                            {getCategoryIcon(recipe.category)}{' '}
+                            {CATEGORIES.find(c => c.value === recipe.category)?.label.split(' ')[1]}
+                          </span>
+                        </div>
+                        <div className='post-actions'>
+                          <button
+                            className={`like-btn ${favoriteStatus[recipe.id] ? 'liked' : ''}`}
+                            onClick={e => handleFavorite(recipe.id, e)}
+                            title={
+                              favoriteStatus[recipe.id]
+                                ? 'Удалить из избранного'
+                                : 'Добавить в избранное'
+                            }
+                          >
+                            {favoriteStatus[recipe.id] ? '❤️' : '🤍'} {recipe.likes}
+                          </button>
+                          <button
+                            className='comments-btn'
+                            onClick={e => {
+                              e.stopPropagation();
+                              toggleComments(recipe.id);
+                            }}
+                            title='Комментарии'
+                          >
+                            💬 {recipe.commentCount || 0}
+                          </button>
+                          <button
+                            className='delete-btn'
+                            onClick={e => {
+                              e.stopPropagation();
+                              deleteRecipe(recipe.id);
+                            }}
+                            title='Удалить рецепт'
+                          >
+                            🗑️
+                          </button>
+                        </div>
+                      </div>
+
+                      {/* Детали рецепта при раскрытии */}
                       {expandedRecipeId === recipe.id && (
                         <div className='recipe-details'>
                           <div className='ingredients-section'>
@@ -382,6 +382,8 @@ const Profile: React.FC = () => {
                           </div>
                         </div>
                       )}
+
+                      {/* Комментарии */}
                       {showComments === recipe.id && (
                         <div className='comments-section'>
                           <h4>Комментарии ({comments[recipe.id]?.length || 0})</h4>
