@@ -18,17 +18,6 @@ const CATEGORIES = [
   { value: 'bakery', label: '🥐 Выпечка' },
 ];
 
-interface Comment {
-  id: number;
-  content: string;
-  likes: number;
-  createdAt: string;
-  author: {
-    id: number;
-    name: string;
-  };
-}
-
 interface Recipe {
   id: number;
   title: string;
@@ -62,8 +51,11 @@ const Recipes: React.FC = () => {
     fetchComments,
     addComment,
     deleteComment,
+    addReply,
   } = useCommentStore();
   const { user, isAuthenticated } = useAuthStore();
+  const [replyingTo, setReplyingTo] = useState<number | null>(null);
+  const [replyContent, setReplyContent] = useState('');
 
   useEffect(() => {
     fetchRecipes();
@@ -111,6 +103,28 @@ const Recipes: React.FC = () => {
 
     checkFavorites();
   }, [recipes, checkFavoriteStatus, isAuthenticated]);
+
+  const handleReply = (commentId: number): void => {
+    setReplyingTo(replyingTo === commentId ? null : commentId);
+    setReplyContent('');
+  };
+
+  const handleAddReply = async (
+    recipeId: number,
+    parentCommentId: number,
+    e: React.FormEvent,
+  ): Promise<void> => {
+    e.preventDefault();
+    if (!replyContent.trim()) return;
+
+    try {
+      await addReply(recipeId, parentCommentId, replyContent.trim());
+      setReplyContent('');
+      setReplyingTo(null);
+    } catch (error) {
+      alert('Ошибка при добавлении ответа');
+    }
+  };
 
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>): void => {
     setSearchQuery(e.target.value);
@@ -445,6 +459,71 @@ const Recipes: React.FC = () => {
                               )}
                             </div>
                             <p className='comment-content'>{comment.content}</p>
+                            <div className='comment-actions'>
+                              <button
+                                className='reply-btn'
+                                onClick={() => handleReply(comment.id)}
+                                title='Ответить'
+                              >
+                                💬 Ответить
+                              </button>
+                              {comment.replyCount > 0 && (
+                                <button className='view-replies-btn' title='Показать ответы'>
+                                  📂 {comment.replyCount}{' '}
+                                  {comment.replyCount === 1 ? 'ответ' : 'ответов'}
+                                </button>
+                              )}
+                            </div>
+
+                            {/* Форма ответа */}
+                            {replyingTo === comment.id && (
+                              <form
+                                onSubmit={e => handleAddReply(recipe.id, comment.id, e)}
+                                className='reply-form'
+                              >
+                                <textarea
+                                  placeholder='Напишите ответ...'
+                                  value={replyContent}
+                                  onChange={e => setReplyContent(e.target.value)}
+                                  rows={2}
+                                  required
+                                />
+                                <div className='reply-actions'>
+                                  <button type='submit' disabled={!replyContent.trim()}>
+                                    Отправить
+                                  </button>
+                                  <button type='button' onClick={() => setReplyingTo(null)}>
+                                    Отмена
+                                  </button>
+                                </div>
+                              </form>
+                            )}
+
+                            {/* Отображение ответов */}
+                            {comment.replies && comment.replies.length > 0 && (
+                              <div className='replies'>
+                                {comment.replies.map(reply => (
+                                  <div key={reply.id} className='comment reply'>
+                                    <div className='comment-header'>
+                                      <span className='comment-author'>{reply.author.name}</span>
+                                      <span className='comment-date'>
+                                        {formatCommentDate(reply.createdAt)}
+                                      </span>
+                                      {user?.id === reply.author.id && (
+                                        <button
+                                          className='delete-comment-btn'
+                                          onClick={() => handleDeleteComment(recipe.id, reply.id)}
+                                          title='Удалить ответ'
+                                        >
+                                          🗑️
+                                        </button>
+                                      )}
+                                    </div>
+                                    <p className='comment-content'>{reply.content}</p>
+                                  </div>
+                                ))}
+                              </div>
+                            )}
                           </div>
                         ))
                       ) : (
