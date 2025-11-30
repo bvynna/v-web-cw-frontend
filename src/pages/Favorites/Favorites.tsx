@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useFavoriteStore } from '../../app/store/favoriteStore';
 import { useCommentStore } from '../../app/store/commentStore';
 import { useAuthStore } from '../../app/store/authStore';
+import { useNavigate } from 'react-router-dom';
 import './Favorites.css';
 
 const CATEGORIES = [
@@ -53,6 +54,8 @@ const Favorites: React.FC = () => {
   const [newComment, setNewComment] = useState('');
   const [replyingTo, setReplyingTo] = useState<number | null>(null);
   const [replyContent, setReplyContent] = useState('');
+  const navigate = useNavigate();
+  const { user: currentUser } = useAuthStore();
 
   useEffect(() => {
     fetchFavorites();
@@ -266,7 +269,22 @@ const Favorites: React.FC = () => {
                   {/* Шапка с информацией и действиями под фото */}
                   <div className='post-header'>
                     <div className='author-info'>
-                      <span className='author-name'>{recipe.author.name}</span>
+                      <span
+                        className='author-name'
+                        onClick={e => {
+                          e.stopPropagation();
+                          if (recipe.author.id !== currentUser?.id) {
+                            navigate(`/user/${recipe.author.id}`);
+                          }
+                        }}
+                        style={{
+                          cursor: recipe.author.id !== currentUser?.id ? 'pointer' : 'default',
+                          color: recipe.author.id !== currentUser?.id ? '#007bff' : '#333',
+                        }}
+                        title={recipe.author.id !== currentUser?.id ? 'Посмотреть профиль' : ''}
+                      >
+                        {recipe.author.name}
+                      </span>
                       <span className='post-date'>{formatDate(recipe.createdAt)}</span>
                     </div>
                     <div className='post-meta'>
