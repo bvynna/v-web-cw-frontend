@@ -64,6 +64,11 @@ const Profile: React.FC = () => {
   const navigate = useNavigate();
   const { user: currentUser } = useAuthStore();
 
+  // Аватар: файл и превью только для настроек
+  const [avatarFile, setAvatarFile] = useState<File | null>(null);
+  const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
+  const [isUploadingAvatar, setIsUploadingAvatar] = useState(false);
+
   useEffect(() => {
     window.scrollTo(0, 0);
   }, [user]);
@@ -74,7 +79,6 @@ const Profile: React.FC = () => {
   }, [fetchProfile, fetchMyRecipes]);
 
   useEffect(() => {
-    // Фильтрация рецептов по категории
     if (selectedCategory === 'all') {
       setFilteredRecipes(myRecipes);
     } else {
@@ -83,7 +87,6 @@ const Profile: React.FC = () => {
   }, [myRecipes, selectedCategory]);
 
   useEffect(() => {
-    // Проверяем статусы избранного для каждого рецепта
     const checkFavorites = async () => {
       const status: { [key: number]: boolean } = {};
       for (const recipe of filteredRecipes) {
@@ -183,12 +186,48 @@ const Profile: React.FC = () => {
     return cat ? cat.label.split(' ')[0] : '📝';
   };
 
+  // Выбор файла: сразу показываем превью в настройках
+  const handleAvatarChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      const file = e.target.files[0];
+      setAvatarFile(file);
+
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setAvatarPreview(reader.result as string);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  // Сохранение: загрузка на сервер + обновление профиля
   const handleSaveProfile = async (): Promise<void> => {
     try {
+      setIsUploadingAvatar(true);
+
+      if (avatarFile) {
+        const token = localStorage.getItem('token');
+        const formData = new FormData();
+        formData.append('avatar', avatarFile);
+
+        await axios.post('http://localhost:5000/api/users/profile/avatar', formData, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            'Content-Type': 'multipart/form-data',
+          },
+        });
+      }
+
       await updateProfile(editName, editEmail);
+      await fetchProfile(); // Обновляем профиль из БД — теперь в шапке появится новый аватар
+
       setIsEditing(false);
+      setAvatarFile(null);
+      setAvatarPreview(null);
     } catch (error: any) {
-      alert(error.response?.data?.error || 'Failed to update profile');
+      alert(error.response?.data?.error || 'Не удалось обновить профиль');
+    } finally {
+      setIsUploadingAvatar(false);
     }
   };
 
@@ -205,7 +244,6 @@ const Profile: React.FC = () => {
         },
       });
 
-      // Обновляем локальное состояние
       const updatedRecipes = filteredRecipes.filter(recipe => recipe.id !== recipeId);
       setFilteredRecipes(updatedRecipes);
       alert('Рецепт успешно удален');
@@ -270,8 +308,20 @@ const Profile: React.FC = () => {
 
   return (
     <div className='profile-container'>
+      {/* ШАПКА ПРОФИЛЯ: показывает только сохранённый аватар из profile.avatarUrl */}
       <div className='profile-header'>
-        <div className='profile-avatar'>{profile?.name?.charAt(0).toUpperCase() || 'U'}</div>
+        <div className='profile-avatar'>
+          {profile?.avatarUrl ? (
+            <img
+              src={`http://localhost:5000${profile.avatarUrl}`}
+              alt={profile.name}
+              className='avatar-image'
+            />
+          ) : (
+            (profile?.name?.charAt(0).toUpperCase() ?? 'U')
+          )}
+        </div>
+
         <div className='profile-info'>
           <h1>{profile?.name || 'Пользователь'}</h1>
           <p className='profile-email'>{profile?.email}</p>
@@ -330,17 +380,13 @@ const Profile: React.FC = () => {
                 {filteredRecipes.map(recipe => (
                   <div key={recipe.id} className='recipe-post'>
                     <div className='post-content'>
-                      {/* Название и описание вверху */}
                       <h3 className='recipe-title' onClick={() => openRecipe(recipe.id)}>
                         {recipe.title}
                         <span className='expand-icon'>
                           {expandedRecipeId === recipe.id ? '▼' : '▶'}
                         </span>
                       </h3>
-
                       <p className='recipe-description'>{recipe.description}</p>
-
-                      {/* Фотография */}
                       {recipe.imageUrl && (
                         <div className='recipe-image-container'>
                           <div className='recipe-image'>
@@ -351,26 +397,9 @@ const Profile: React.FC = () => {
                           </div>
                         </div>
                       )}
-
-                      {/* Шапка с информацией и действиями под фото */}
                       <div className='post-header'>
                         <div className='author-info'>
-                          <span
-                            className='author-name'
-                            onClick={e => {
-                              e.stopPropagation();
-                              if (recipe.author.id !== currentUser?.id) {
-                                navigate(`/user/${recipe.author.id}`);
-                              }
-                            }}
-                            style={{
-                              cursor: recipe.author.id !== currentUser?.id ? 'pointer' : 'default',
-                              color: recipe.author.id !== currentUser?.id ? '#007bff' : '#333',
-                            }}
-                            title={recipe.author.id !== currentUser?.id ? 'Посмотреть профиль' : ''}
-                          >
-                            {profile?.name}
-                          </span>
+                          <span className='author-name'>{profile?.name}</span>
                           <span className='post-date'>{formatDate(recipe.createdAt)}</span>
                         </div>
                         <div className='post-meta'>
@@ -383,11 +412,6 @@ const Profile: React.FC = () => {
                           <button
                             className={`like-btn ${favoriteStatus[recipe.id] ? 'liked' : ''}`}
                             onClick={e => handleFavorite(recipe.id, e)}
-                            title={
-                              favoriteStatus[recipe.id]
-                                ? 'Удалить из избранного'
-                                : 'Добавить в избранное'
-                            }
                           >
                             {favoriteStatus[recipe.id] ? '❤️' : '🤍'} {recipe.likes}
                           </button>
@@ -397,7 +421,6 @@ const Profile: React.FC = () => {
                               e.stopPropagation();
                               toggleComments(recipe.id);
                             }}
-                            title='Комментарии'
                           >
                             💬 {recipe.commentCount || 0}
                           </button>
@@ -407,14 +430,11 @@ const Profile: React.FC = () => {
                               e.stopPropagation();
                               deleteRecipe(recipe.id);
                             }}
-                            title='Удалить рецепт'
                           >
                             🗑️
                           </button>
                         </div>
                       </div>
-
-                      {/* Детали рецепта при раскрытии */}
                       {expandedRecipeId === recipe.id && (
                         <div className='recipe-details'>
                           <div className='ingredients-section'>
@@ -425,7 +445,6 @@ const Profile: React.FC = () => {
                               ))}
                             </ul>
                           </div>
-
                           <div className='instructions-section'>
                             <h4>Приготовление:</h4>
                             <ol className='instructions-list'>
@@ -436,12 +455,9 @@ const Profile: React.FC = () => {
                           </div>
                         </div>
                       )}
-
-                      {/* Комментарии */}
                       {showComments === recipe.id && (
                         <div className='comments-section'>
                           <h4>Комментарии ({comments[recipe.id]?.length || 0})</h4>
-
                           {isAuthenticated ? (
                             <form
                               onSubmit={e => handleAddComment(recipe.id, e)}
@@ -461,7 +477,6 @@ const Profile: React.FC = () => {
                           ) : (
                             <p className='login-to-comment'>Войдите, чтобы оставить комментарий</p>
                           )}
-
                           <div className='comments-list'>
                             {commentsLoading ? (
                               <div className='loading'>Загрузка комментариев...</div>
@@ -484,11 +499,6 @@ const Profile: React.FC = () => {
                                         color: '#007bff',
                                         fontWeight: '600',
                                       }}
-                                      title={
-                                        comment.author.id !== currentUser?.id
-                                          ? 'Посмотреть профиль'
-                                          : 'Перейти в мой профиль'
-                                      }
                                     >
                                       {comment.author.name}
                                     </span>
@@ -499,7 +509,6 @@ const Profile: React.FC = () => {
                                       <button
                                         className='delete-comment-btn'
                                         onClick={() => handleDeleteComment(recipe.id, comment.id)}
-                                        title='Удалить комментарий'
                                       >
                                         🗑️
                                       </button>
@@ -510,19 +519,16 @@ const Profile: React.FC = () => {
                                     <button
                                       className='reply-btn'
                                       onClick={() => handleReply(comment.id)}
-                                      title='Ответить'
                                     >
                                       💬 Ответить
                                     </button>
                                     {comment.replyCount > 0 && (
-                                      <button className='view-replies-btn' title='Показать ответы'>
+                                      <button className='view-replies-btn'>
                                         📂 {comment.replyCount}{' '}
                                         {comment.replyCount === 1 ? 'ответ' : 'ответов'}
                                       </button>
                                     )}
                                   </div>
-
-                                  {/* Форма ответа */}
                                   {replyingTo === comment.id && (
                                     <form
                                       onSubmit={e => handleAddReply(recipe.id, comment.id, e)}
@@ -545,8 +551,6 @@ const Profile: React.FC = () => {
                                       </div>
                                     </form>
                                   )}
-
-                                  {/* Отображение ответов */}
                                   {comment.replies && comment.replies.length > 0 && (
                                     <div className='replies'>
                                       {comment.replies.map(reply => (
@@ -567,11 +571,6 @@ const Profile: React.FC = () => {
                                                 color: '#007bff',
                                                 fontWeight: '600',
                                               }}
-                                              title={
-                                                reply.author.id !== currentUser?.id
-                                                  ? 'Посмотреть профиль'
-                                                  : 'Перейти в мой профиль'
-                                              }
                                             >
                                               {reply.author.name}
                                             </span>
@@ -584,7 +583,6 @@ const Profile: React.FC = () => {
                                                 onClick={() =>
                                                   handleDeleteComment(recipe.id, reply.id)
                                                 }
-                                                title='Удалить ответ'
                                               >
                                                 🗑️
                                               </button>
@@ -643,15 +641,51 @@ const Profile: React.FC = () => {
                 )}
               </div>
 
+              {/* ПРЕВЬЮ В НАСТРОЙКАХ: показывает avatarPreview (если выбран файл) или сохранённый аватар */}
+              <div className='form-group'>
+                <label>Аватар</label>
+                <div className='avatar-settings'>
+                  {avatarPreview ? (
+                    <img src={avatarPreview} alt='Превью аватара' className='avatar-preview' />
+                  ) : profile?.avatarUrl ? (
+                    <img
+                      src={`http://localhost:5000${profile.avatarUrl}`}
+                      alt={profile.name}
+                      className='avatar-preview'
+                    />
+                  ) : (
+                    <div className='avatar-placeholder'>
+                      {profile?.name?.charAt(0).toUpperCase() ?? 'У'}
+                    </div>
+                  )}
+
+                  {isEditing && (
+                    <>
+                      <input
+                        id='avatar-input'
+                        type='file'
+                        accept='image/*'
+                        onChange={handleAvatarChange}
+                        style={{ display: 'none' }}
+                      />
+                      <label htmlFor='avatar-input' className='upload-avatar-btn'>
+                        📷 Выбрать фото
+                      </label>
+                      {avatarFile && <p className='file-selected'>Выбран: {avatarFile.name}</p>}
+                    </>
+                  )}
+                </div>
+              </div>
+
               <div className='form-actions'>
                 {isEditing ? (
                   <>
                     <button
                       className='save-btn'
                       onClick={handleSaveProfile}
-                      disabled={!editName.trim() || !editEmail.trim()}
+                      disabled={!editName.trim() || !editEmail.trim() || isUploadingAvatar}
                     >
-                      Сохранить
+                      {isUploadingAvatar ? 'Сохранение...' : 'Сохранить'}
                     </button>
                     <button
                       className='cancel-btn'
@@ -659,6 +693,8 @@ const Profile: React.FC = () => {
                         setIsEditing(false);
                         setEditName(profile?.name || '');
                         setEditEmail(profile?.email || '');
+                        setAvatarFile(null);
+                        setAvatarPreview(null);
                       }}
                     >
                       Отмена

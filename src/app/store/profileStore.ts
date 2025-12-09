@@ -8,6 +8,7 @@ interface UserProfile {
   email: string;
   name: string;
   createdAt: string;
+  avatarUrl?: string | null;
 }
 
 interface Recipe {
@@ -35,6 +36,7 @@ interface ProfileState {
   fetchMyRecipes: () => Promise<void>;
   updateProfile: (name: string, email: string) => Promise<void>;
   clearProfile: () => void;
+  removeRecipe: (recipeId: number) => void;
 }
 
 export const useProfileStore = create<ProfileState>((set, get) => ({
@@ -88,6 +90,7 @@ export const useProfileStore = create<ProfileState>((set, get) => ({
   clearProfile: (): void => {
     set({ profile: null, myRecipes: [] });
   },
+
   removeRecipe: (recipeId: number) => {
     const { myRecipes } = get();
     set({

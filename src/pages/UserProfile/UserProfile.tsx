@@ -12,6 +12,7 @@ interface UserProfile {
   name: string;
   email: string;
   createdAt: string;
+  avatarUrl?: string | null;
 }
 
 interface Recipe {
@@ -138,14 +139,25 @@ const UserProfile: React.FC = () => {
   return (
     <div className='user-profile-container'>
       <div className='profile-header'>
-        <div className='profile-avatar'>{userProfile.name.charAt(0).toUpperCase()}</div>
+        <div className='profile-avatar'>
+          {userProfile.avatarUrl ? (
+            <img
+              src={`http://localhost:5000${userProfile.avatarUrl}`}
+              alt={userProfile.name}
+              className='avatar-image'
+            />
+          ) : (
+            userProfile.name.charAt(0).toUpperCase()
+          )}
+        </div>
+
         <div className='profile-info'>
           <h1>{userProfile.name}</h1>
-          <p className='profile-email'>{userProfile.email}</p>
-          <p className='profile-join-date'>Участник с {formatDate(userProfile.createdAt)}</p>
+          {isOwnProfile && <p className='profile-email'>{userProfile.email}</p>}
+          <p className='profile-join-date'>{formatDate(userProfile.createdAt)}</p>
           {isOwnProfile && (
             <Link to='/profile' className='edit-profile-link'>
-              ⚙️ Мой профиль
+              Редактировать профиль
             </Link>
           )}
         </div>
