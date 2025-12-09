@@ -5,7 +5,19 @@ import { useAuthStore } from '../../app/store/authStore';
 import { useFavoriteStore } from '../../app/store/favoriteStore';
 import { useCommentStore } from '../../app/store/commentStore';
 import { useLocation } from 'react-router-dom';
+import { useSubscriptionStore } from '../../app/store/subscriptionStore';
+import SubscribersList from '../../components/Profile/SubscribersList';
+import LikesList from '../../components/Recipes/LikesList';
 import './UserProfile.css';
+
+const CATEGORIES = [
+  { value: 'breakfast', label: '🍳 Завтрак' },
+  { value: 'lunch', label: '🍽️ Обед' },
+  { value: 'dinner', label: '🍖 Ужин' },
+  { value: 'dessert', label: '🍰 Десерт' },
+  { value: 'snack', label: '🥨 Перекус' },
+  { value: 'drink', label: '🍹 Напиток' },
+];
 
 interface UserProfile {
   id: number;
@@ -57,6 +69,39 @@ const UserProfile: React.FC = () => {
   const [replyingTo, setReplyingTo] = useState<number | null>(null);
   const [replyContent, setReplyContent] = useState('');
   const [pendingScrollToRecipe, setPendingScrollToRecipe] = useState<number | null>(null);
+  const {
+    subscribe,
+    unsubscribe,
+    checkSubscription,
+    fetchSubscribersCount,
+    isSubscribed,
+    subscribersCount,
+  } = useSubscriptionStore();
+  const [subscriptionStatus, setSubscriptionStatus] = useState(false);
+  const [subscribersCountLocal, setSubscribersCountLocal] = useState(0);
+  const [isSubscribedToMe, setIsSubscribedToMe] = useState(false);
+  const [showSubscribersModal, setShowSubscribersModal] = useState(false);
+  const [showLikesModal, setShowLikesModal] = useState(false);
+  const [selectedRecipeIdForLikes, setSelectedRecipeIdForLikes] = useState<number | null>(null);
+
+  useEffect(() => {
+    if (userProfile) {
+      fetchSubscribersCount(userProfile.id);
+      if (isAuthenticated && !isOwnProfile) {
+        checkSubscription(userProfile.id).then(status => {
+          setSubscriptionStatus(status);
+        });
+      }
+    }
+  }, [userProfile, isAuthenticated]);
+
+  useEffect(() => {
+    if (userProfile) {
+      setSubscribersCountLocal(subscribersCount[userProfile.id] || 0);
+      setSubscriptionStatus(isSubscribed[userProfile.id] || false);
+    }
+  }, [subscribersCount, isSubscribed, userProfile]);
+
   useEffect(() => {
     const state = location.state as {
       scrollToRecipeId?: number;
@@ -66,7 +111,6 @@ const UserProfile: React.FC = () => {
     if (state?.scrollToRecipeId) {
       setPendingScrollToRecipe(state.scrollToRecipeId);
 
-      // Сохраняем тип уведомления и ID комментария
       if (state.notificationType) {
         sessionStorage.setItem('notificationType', state.notificationType);
       }
@@ -89,14 +133,9 @@ const UserProfile: React.FC = () => {
         const recipeElement = document.getElementById(`recipe-${recipeId}`);
 
         if (recipeElement) {
-          // Раскрываем рецепт
-          setExpandedRecipeId(recipeId);
-
-          // Для комментариев и ответов открываем комментарии
           if (notificationType === 'comment' || notificationType === 'reply') {
             setShowComments(recipeId);
 
-            // Ждём загрузки комментариев
             setTimeout(() => {
               if (commentId) {
                 const commentElement = document.getElementById(`comment-${commentId}`);
@@ -113,7 +152,6 @@ const UserProfile: React.FC = () => {
               }
             }, 500);
           } else if (notificationType === 'like') {
-            // Для лайка скроллим к рецепту и подсвечиваем кнопку лайка
             recipeElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
 
             setTimeout(() => {
@@ -128,8 +166,6 @@ const UserProfile: React.FC = () => {
             recipeElement.classList.add('highlighted');
             setTimeout(() => recipeElement.classList.remove('highlighted'), 2000);
           }
-
-          // Очищаем sessionStorage
           sessionStorage.removeItem('notificationType');
           sessionStorage.removeItem('commentId');
           setPendingScrollToRecipe(null);
@@ -153,6 +189,47 @@ const UserProfile: React.FC = () => {
       checkFavorites();
     }
   }, [userRecipes]);
+
+  // Проверяем подписан ли этот пользователь на меня
+  useEffect(() => {
+    const checkIfSubscribedToMe = async () => {
+      const isOwn = currentUser?.id === userProfile?.id;
+
+      if (userProfile && currentUser && !isOwn) {
+        try {
+          const token = localStorage.getItem('token');
+          const response = await axios.get(
+            `http://localhost:5000/api/users/${currentUser.id}/subscribers/check/${userProfile.id}`,
+            { headers: { Authorization: `Bearer ${token}` } },
+          );
+          setIsSubscribedToMe(response.data.isSubscribed);
+        } catch (error) {
+          console.error('Failed to check if subscribed to me:', error);
+        }
+      }
+    };
+
+    checkIfSubscribedToMe();
+  }, [userProfile, currentUser]);
+
+  const handleSubscriptionToggle = async () => {
+    if (!userProfile) return;
+
+    try {
+      if (subscriptionStatus) {
+        await unsubscribe(userProfile.id);
+      } else {
+        await subscribe(userProfile.id);
+      }
+    } catch (error) {
+      alert('Ошибка при изменении подписки');
+    }
+  };
+
+  const getCategoryIcon = (category: string): string => {
+    const categoryObj = CATEGORIES.find(c => c.value === category);
+    return categoryObj ? categoryObj.label.split(' ')[0] : '📝';
+  };
 
   const fetchUserProfile = async (): Promise<void> => {
     try {
@@ -295,6 +372,11 @@ const UserProfile: React.FC = () => {
     });
   };
 
+  const handleShowLikes = (recipeId: number) => {
+    setSelectedRecipeIdForLikes(recipeId);
+    setShowLikesModal(true);
+  };
+
   if (isLoading) {
     return <div className='loading'>Загрузка профиля...</div>;
   }
@@ -328,6 +410,29 @@ const UserProfile: React.FC = () => {
           <h1>{userProfile.name}</h1>
           {isOwnProfile && <p className='profile-email'>{userProfile.email}</p>}
           <p className='profile-join-date'>Участник с {formatDate(userProfile.createdAt)}</p>
+          {/* Счётчик подписчиков */}
+          <p
+            className='subscribers-count clickable'
+            onClick={() => setShowSubscribersModal(true)}
+            title='Посмотреть подписчиков'
+          >
+            👥 Подписчиков: {subscribersCountLocal}
+          </p>
+          {/* Кнопка подписки */}
+          {!isOwnProfile && isAuthenticated && (
+            <button
+              className={`subscribe-btn ${subscriptionStatus ? 'subscribed' : ''}`}
+              onClick={handleSubscriptionToggle}
+            >
+              {subscriptionStatus ? (
+                <span className='subscribe-text'>✓ Вы подписаны</span>
+              ) : isSubscribedToMe ? (
+                '+ Подписаться в ответ'
+              ) : (
+                '+ Подписаться'
+              )}
+            </button>
+          )}
           {isOwnProfile && (
             <Link to='/profile' className='edit-profile-link'>
               ⚙️ Мой профиль
@@ -362,6 +467,12 @@ const UserProfile: React.FC = () => {
                       <span className='author-name'>{userProfile.name}</span>
                       <span className='post-date'>{formatDate(recipe.createdAt)}</span>
                     </div>
+                    <div className='post-meta'>
+                      <span className='recipe-category'>
+                        {getCategoryIcon(recipe.category)}{' '}
+                        {CATEGORIES.find(c => c.value === recipe.category)?.label.split(' ')[1]}
+                      </span>
+                    </div>
                     <div className='post-actions'>
                       <button
                         className={`like-btn ${favoriteStatus[recipe.id] ? 'liked' : ''}`}
@@ -381,6 +492,13 @@ const UserProfile: React.FC = () => {
                       >
                         💬 {recipe.commentCount || 0}
                       </button>
+                      {recipe.likes > 0 && (
+                        <div className='likes-info'>
+                          <span className='likes-link' onClick={() => handleShowLikes(recipe.id)}>
+                            Посмотреть все лайки ({recipe.likes})
+                          </span>
+                        </div>
+                      )}
                     </div>
                   </div>
 
@@ -564,6 +682,13 @@ const UserProfile: React.FC = () => {
           </div>
         )}
       </div>
+      {showSubscribersModal && userProfile && (
+        <SubscribersList userId={userProfile.id} onClose={() => setShowSubscribersModal(false)} />
+      )}
+
+      {showLikesModal && selectedRecipeIdForLikes && (
+        <LikesList recipeId={selectedRecipeIdForLikes} onClose={() => setShowLikesModal(false)} />
+      )}
     </div>
   );
 };

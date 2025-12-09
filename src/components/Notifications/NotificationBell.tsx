@@ -12,6 +12,7 @@ const NotificationBell: React.FC = () => {
     fetchUnreadCount,
     markAsRead,
     markAllAsRead,
+    clearAllNotifications,
   } = useNotificationStore();
   const { user: currentUser } = useAuthStore();
   const [showDropdown, setShowDropdown] = useState(false);
@@ -19,9 +20,15 @@ const NotificationBell: React.FC = () => {
 
   useEffect(() => {
     fetchUnreadCount();
-    const interval = setInterval(fetchUnreadCount, 30000); // каждые 30 сек
+    const interval = setInterval(fetchUnreadCount, 30000);
     return () => clearInterval(interval);
   }, []);
+
+  const handleClearAll = async () => {
+    if (window.confirm('Удалить все уведомления?')) {
+      await clearAllNotifications();
+    }
+  };
 
   const handleBellClick = () => {
     setShowDropdown(!showDropdown);
@@ -34,12 +41,12 @@ const NotificationBell: React.FC = () => {
     await markAsRead(notification.id);
     setShowDropdown(false);
 
-    if (notification.recipe) {
+    if (notification.type === 'subscription') {
+      navigate(`/user/${notification.sender.id}`);
+    } else if (notification.recipe) {
       const recipeAuthorId = notification.recipe.authorId;
 
-      // Определяем куда переходить: на свой профиль или на чужой
       if (recipeAuthorId === currentUser?.id) {
-        // Это мой рецепт → переходим на /profile
         navigate('/profile', {
           state: {
             scrollToRecipeId: notification.recipeId,
@@ -48,7 +55,6 @@ const NotificationBell: React.FC = () => {
           },
         });
       } else {
-        // Это чужой рецепт → переходим на /user/:id
         navigate(`/user/${recipeAuthorId}`, {
           state: {
             scrollToRecipeId: notification.recipeId,
@@ -68,6 +74,8 @@ const NotificationBell: React.FC = () => {
         return `${notification.sender.name} оставил комментарий к рецепту "${notification.recipe?.title}"`;
       case 'reply':
         return `${notification.sender.name} ответил на ваш комментарий в рецепте "${notification.recipe?.title}"`;
+      case 'subscription':
+        return `${notification.sender.name} подписался на вас`;
       default:
         return 'Новое уведомление';
     }
@@ -102,6 +110,11 @@ const NotificationBell: React.FC = () => {
             {unreadCount > 0 && (
               <button onClick={markAllAsRead} className='mark-all-read'>
                 Прочитать все
+              </button>
+            )}
+            {notifications.length > 0 && (
+              <button onClick={handleClearAll} className='clear-all-btn'>
+                🗑️ Очистить
               </button>
             )}
           </div>

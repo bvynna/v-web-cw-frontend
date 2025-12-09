@@ -1,4 +1,94 @@
-/* Комментарии */
+.likes-info {
+  margin-top: 8px;
+  padding: 0 16px;
+}
+
+.likes-link {
+  font-size: 14px;
+  color: #666;
+  cursor: pointer;
+  transition: color 0.2s;
+}
+
+.likes-link:hover {
+  color: #000;
+  font-weight: 600;
+}
+
+.subscribers-count.clickable {
+  cursor: pointer;
+  color: #007bff;
+  transition: color 0.2s;
+}
+
+.subscribers-count.clickable:hover {
+  color: #0056b3;
+  text-decoration: underline;
+}
+
+.likes-count {
+  display: inline-block;
+  transition: color 0.2s;
+}
+
+.subscribers-count {
+  font-size: 14px;
+  color: #666;
+  margin: 8px 0;
+}
+
+.subscribe-btn {
+  position: relative;
+  margin-top: 12px;
+  padding: 10px 24px;
+  border: none;
+  border-radius: 6px;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  min-width: 180px;
+}
+
+.subscribe-btn:not(.subscribed) {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+}
+
+.subscribe-btn:not(.subscribed):hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(102, 126, 234, 0.6);
+}
+
+.subscribe-btn.subscribed {
+  background: #28a745;
+  color: white;
+}
+
+.subscribe-btn.subscribed:hover {
+  background: #dc3545;
+}
+
+.subscribe-btn.subscribed span.subscribe-text {
+  display: inline;
+}
+
+.subscribe-btn.subscribed:hover span.subscribe-text::before {
+  content: '✕ Отписаться';
+}
+
+.subscribe-btn.subscribed:hover span.subscribe-text {
+  visibility: hidden;
+  position: relative;
+}
+
+.subscribe-btn.subscribed:hover span.subscribe-text::before {
+  visibility: visible;
+  position: absolute;
+  left: 0;
+  right: 0;
+}
+
 .comments-section {
   margin-top: 20px;
   padding: 16px;
@@ -247,6 +337,12 @@
 .error-container h2 {
   color: #dc3545;
   margin-bottom: 1rem;
+}
+.post-meta {
+  display: flex;
+  align-items: center;
+  flex: 0 0 auto;
+  margin-right: auto;
 }
 
 .error-container a {

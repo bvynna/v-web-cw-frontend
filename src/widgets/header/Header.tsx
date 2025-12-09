@@ -1,6 +1,6 @@
 import React from 'react';
 import { useAuthStore } from '../../app/store/authStore';
-import NotificationBell from '../../pages/Notifications/NotificationBell';
+import NotificationBell from '../../components/Notifications/NotificationBell';
 import './Header.css';
 import { Link } from 'react-router-dom';
 

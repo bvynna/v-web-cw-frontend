@@ -5,6 +5,7 @@ import { useAuthStore } from '../../app/store/authStore';
 import { useFavoriteStore } from '../../app/store/favoriteStore';
 import { useNavigate } from 'react-router-dom';
 import './Recipes.css';
+import LikesList from '../../components/Recipes/LikesList';
 
 const CATEGORIES = [
   { value: 'all', label: '📝 Все рецепты' },
@@ -59,6 +60,8 @@ const Recipes: React.FC = () => {
   const [replyContent, setReplyContent] = useState('');
   const navigate = useNavigate();
   const { user: currentUser } = useAuthStore();
+  const [showLikesModal, setShowLikesModal] = useState(false);
+  const [selectedRecipeIdForLikes, setSelectedRecipeIdForLikes] = useState<number | null>(null);
 
   useEffect(() => {
     fetchRecipes();
@@ -110,6 +113,11 @@ const Recipes: React.FC = () => {
   const handleReply = (commentId: number): void => {
     setReplyingTo(replyingTo === commentId ? null : commentId);
     setReplyContent('');
+  };
+
+  const handleShowLikes = (recipeId: number) => {
+    setSelectedRecipeIdForLikes(recipeId);
+    setShowLikesModal(true);
   };
 
   const handleAddReply = async (
@@ -193,11 +201,9 @@ const Recipes: React.FC = () => {
 
     try {
       if (favoriteStatus[recipeId]) {
-        // Удаляем из избранного
         await removeFromFavorites(recipeId);
         setFavoriteStatus(prev => ({ ...prev, [recipeId]: false }));
 
-        // Обновляем счетчик лайков
         setRecipes(prevRecipes =>
           prevRecipes.map(recipe =>
             recipe.id === recipeId && recipe.likes > 0
@@ -206,11 +212,9 @@ const Recipes: React.FC = () => {
           ),
         );
       } else {
-        // Добавляем в избранное
         await addToFavorites(recipeId);
         setFavoriteStatus(prev => ({ ...prev, [recipeId]: true }));
 
-        // Обновляем счетчик лайков
         setRecipes(prevRecipes =>
           prevRecipes.map(recipe =>
             recipe.id === recipeId ? { ...recipe, likes: recipe.likes + 1 } : recipe,
@@ -418,6 +422,13 @@ const Recipes: React.FC = () => {
                         🗑️
                       </button>
                     )}
+                    {recipe.likes > 0 && (
+                      <div className='likes-info'>
+                        <span className='likes-link' onClick={() => handleShowLikes(recipe.id)}>
+                          Посмотреть все лайки ({recipe.likes})
+                        </span>
+                      </div>
+                    )}
                   </div>
                 </div>
 
@@ -610,6 +621,9 @@ const Recipes: React.FC = () => {
           ))
         )}
       </div>
+      {showLikesModal && selectedRecipeIdForLikes && (
+        <LikesList recipeId={selectedRecipeIdForLikes} onClose={() => setShowLikesModal(false)} />
+      )}
     </div>
   );
 };

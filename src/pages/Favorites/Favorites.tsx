@@ -4,6 +4,7 @@ import { useCommentStore } from '../../app/store/commentStore';
 import { useAuthStore } from '../../app/store/authStore';
 import { useNavigate } from 'react-router-dom';
 import './Favorites.css';
+import LikesList from '../../components/Recipes/LikesList';
 
 const CATEGORIES = [
   { value: 'all', label: '📝 Все рецепты' },
@@ -56,6 +57,8 @@ const Favorites: React.FC = () => {
   const [replyContent, setReplyContent] = useState('');
   const navigate = useNavigate();
   const { user: currentUser } = useAuthStore();
+  const [showLikesModal, setShowLikesModal] = useState(false);
+  const [selectedRecipeIdForLikes, setSelectedRecipeIdForLikes] = useState<number | null>(null);
 
   useEffect(() => {
     fetchFavorites();
@@ -82,6 +85,11 @@ const Favorites: React.FC = () => {
   const handleReply = (commentId: number): void => {
     setReplyingTo(replyingTo === commentId ? null : commentId);
     setReplyContent('');
+  };
+
+  const handleShowLikes = (recipeId: number) => {
+    setSelectedRecipeIdForLikes(recipeId);
+    setShowLikesModal(true);
   };
 
   const handleAddReply = async (
@@ -311,6 +319,13 @@ const Favorites: React.FC = () => {
                       >
                         💬 {recipe.commentCount || 0}
                       </button>
+                      {recipe.likes > 0 && (
+                        <div className='likes-info'>
+                          <span className='likes-link' onClick={() => handleShowLikes(recipe.id)}>
+                            Посмотреть все лайки ({recipe.likes})
+                          </span>
+                        </div>
+                      )}
                     </div>
                   </div>
 
@@ -507,6 +522,9 @@ const Favorites: React.FC = () => {
             ))}
           </div>
         </>
+      )}
+      {showLikesModal && selectedRecipeIdForLikes && (
+        <LikesList recipeId={selectedRecipeIdForLikes} onClose={() => setShowLikesModal(false)} />
       )}
     </div>
   );

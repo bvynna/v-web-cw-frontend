@@ -5,7 +5,7 @@ const API_URL = 'http://localhost:5000/api';
 
 interface Notification {
   id: number;
-  type: 'like' | 'comment' | 'reply';
+  type: 'like' | 'comment' | 'reply' | 'subscription';
   sender: {
     id: number;
     name: string;
@@ -28,6 +28,7 @@ interface NotificationState {
   fetchUnreadCount: () => Promise<void>;
   markAsRead: (notificationId: number) => Promise<void>;
   markAllAsRead: () => Promise<void>;
+  clearAllNotifications: () => Promise<void>;
 }
 
 export const useNotificationStore = create<NotificationState>((set, get) => ({
@@ -90,6 +91,18 @@ export const useNotificationStore = create<NotificationState>((set, get) => ({
       }));
     } catch (error) {
       console.error('Failed to mark all as read:', error);
+    }
+  },
+
+  clearAllNotifications: async () => {
+    try {
+      const token = localStorage.getItem('token');
+      await axios.delete(`${API_URL}/notifications/clear`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      set({ notifications: [], unreadCount: 0 });
+    } catch (error) {
+      console.error('Failed to clear notifications:', error);
     }
   },
 }));

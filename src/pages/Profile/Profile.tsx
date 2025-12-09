@@ -6,6 +6,9 @@ import { useCommentStore } from '../../app/store/commentStore';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 import { useLocation } from 'react-router-dom';
+import { useSubscriptionStore } from '../../app/store/subscriptionStore';
+import SubscribersList from '../../components/Profile/SubscribersList';
+import LikesList from '../../components/Recipes/LikesList';
 import './Profile.css';
 
 const CATEGORIES = [
@@ -65,12 +68,27 @@ const Profile: React.FC = () => {
   const [replyContent, setReplyContent] = useState('');
   const navigate = useNavigate();
   const { user: currentUser } = useAuthStore();
-
-  // Аватар: файл и превью только для настроек
   const [avatarFile, setAvatarFile] = useState<File | null>(null);
   const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
   const [isUploadingAvatar, setIsUploadingAvatar] = useState(false);
   const [pendingScrollToRecipe, setPendingScrollToRecipe] = useState<number | null>(null);
+  const { fetchSubscribersCount, subscribersCount } = useSubscriptionStore();
+  const [mySubscribersCount, setMySubscribersCount] = useState(0);
+  const [showSubscribersModal, setShowSubscribersModal] = useState(false);
+  const [showLikesModal, setShowLikesModal] = useState(false);
+  const [selectedRecipeIdForLikes, setSelectedRecipeIdForLikes] = useState<number | null>(null);
+
+  useEffect(() => {
+    if (profile) {
+      fetchSubscribersCount(profile.id);
+    }
+  }, [profile]);
+
+  useEffect(() => {
+    if (profile) {
+      setMySubscribersCount(subscribersCount[profile.id] || 0);
+    }
+  }, [subscribersCount, profile]);
 
   useEffect(() => {
     window.scrollTo(0, 0);
@@ -116,11 +134,9 @@ const Profile: React.FC = () => {
         const recipeElement = document.getElementById(`recipe-${recipeId}`);
 
         if (recipeElement) {
-          // Для комментариев и ответов открываем комментарии
           if (notificationType === 'comment' || notificationType === 'reply') {
             setShowComments(recipeId);
 
-            // Ждём загрузки комментариев
             setTimeout(() => {
               if (commentId) {
                 const commentElement = document.getElementById(`comment-${commentId}`);
@@ -130,15 +146,13 @@ const Profile: React.FC = () => {
                   setTimeout(() => commentElement.classList.remove('highlighted'), 2000);
                 }
               } else {
-                // Если нет ID комментария, скроллим к секции комментариев
                 const commentsSection = recipeElement.querySelector('.comments-section');
                 if (commentsSection) {
                   commentsSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
                 }
               }
-            }, 500); // Даём время на загрузку комментариев
+            }, 500);
           } else if (notificationType === 'like') {
-            // Для лайка скроллим к самому рецепту и подсвечиваем кнопку лайка
             recipeElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
 
             setTimeout(() => {
@@ -149,13 +163,11 @@ const Profile: React.FC = () => {
               }
             }, 300);
           } else {
-            // По умолчанию просто скроллим к рецепту
             recipeElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
             recipeElement.classList.add('highlighted');
             setTimeout(() => recipeElement.classList.remove('highlighted'), 2000);
           }
 
-          // Очищаем sessionStorage
           sessionStorage.removeItem('notificationType');
           sessionStorage.removeItem('commentId');
           setPendingScrollToRecipe(null);
@@ -312,7 +324,7 @@ const Profile: React.FC = () => {
       }
 
       await updateProfile(editName, editEmail);
-      await fetchProfile(); // Обновляем профиль из БД — теперь в шапке появится новый аватар
+      await fetchProfile();
 
       setIsEditing(false);
       setAvatarFile(null);
@@ -395,13 +407,17 @@ const Profile: React.FC = () => {
     });
   };
 
+  const handleShowLikes = (recipeId: number) => {
+    setSelectedRecipeIdForLikes(recipeId);
+    setShowLikesModal(true);
+  };
+
   if (isLoading && !profile) {
     return <div className='loading'>Загрузка профиля...</div>;
   }
 
   return (
     <div className='profile-container'>
-      {/* ШАПКА ПРОФИЛЯ: показывает только сохранённый аватар из profile.avatarUrl */}
       <div className='profile-header'>
         <div className='profile-avatar'>
           {profile?.avatarUrl ? (
@@ -418,6 +434,13 @@ const Profile: React.FC = () => {
         <div className='profile-info'>
           <h1>{profile?.name || 'Пользователь'}</h1>
           <p className='profile-email'>{profile?.email}</p>
+          <p
+            className='subscribers-count clickable'
+            onClick={() => setShowSubscribersModal(true)}
+            title='Посмотреть подписчиков'
+          >
+            👥 Подписчиков: {mySubscribersCount}
+          </p>
           <p className='profile-join-date'>
             Участник с {profile ? formatDate(profile.createdAt) : '...'}
           </p>
@@ -526,8 +549,19 @@ const Profile: React.FC = () => {
                           >
                             🗑️
                           </button>
+                          {recipe.likes > 0 && (
+                            <div className='likes-info'>
+                              <span
+                                className='likes-link'
+                                onClick={() => handleShowLikes(recipe.id)}
+                              >
+                                Посмотреть все лайки ({recipe.likes})
+                              </span>
+                            </div>
+                          )}
                         </div>
                       </div>
+
                       {expandedRecipeId === recipe.id && (
                         <div className='recipe-details'>
                           <div className='ingredients-section'>
@@ -811,6 +845,13 @@ const Profile: React.FC = () => {
           </div>
         )}
       </div>
+      {showSubscribersModal && profile && (
+        <SubscribersList userId={profile.id} onClose={() => setShowSubscribersModal(false)} />
+      )}
+
+      {showLikesModal && selectedRecipeIdForLikes && (
+        <LikesList recipeId={selectedRecipeIdForLikes} onClose={() => setShowLikesModal(false)} />
+      )}
     </div>
   );
 };
