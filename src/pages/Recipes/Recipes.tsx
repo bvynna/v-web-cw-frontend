@@ -342,7 +342,7 @@ const Recipes: React.FC = () => {
           </div>
         ) : (
           filteredRecipes.map(recipe => (
-            <div key={recipe.id} className='recipe-post'>
+            <div key={recipe.id} id={`recipe-${recipe.id}`} className='recipe-post'>
               <div className='post-content'>
                 {/* Название и описание вверху */}
                 <h3 className='recipe-title' onClick={() => toggleRecipe(recipe.id)}>

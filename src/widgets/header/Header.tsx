@@ -1,5 +1,6 @@
 import React from 'react';
 import { useAuthStore } from '../../app/store/authStore';
+import NotificationBell from '../../pages/Notifications/NotificationBell';
 import './Header.css';
 import { Link } from 'react-router-dom';
 
@@ -23,6 +24,7 @@ const Header: React.FC = () => {
               <Link to='/favorites'>❤️ Избранное</Link>
               <span>Привет, {user?.name}!</span>
               <Link to='/create'>Создать рецепт</Link>
+              {isAuthenticated && <NotificationBell />}
               <button onClick={handleLogout}>Выйти</button>
             </div>
           ) : (

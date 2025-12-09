@@ -5,6 +5,7 @@ import { useFavoriteStore } from '../../app/store/favoriteStore';
 import { useCommentStore } from '../../app/store/commentStore';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
+import { useLocation } from 'react-router-dom';
 import './Profile.css';
 
 const CATEGORIES = [
@@ -37,6 +38,7 @@ interface Recipe {
 }
 
 const Profile: React.FC = () => {
+  const location = useLocation();
   const { profile, myRecipes, isLoading, fetchProfile, fetchMyRecipes, updateProfile } =
     useProfileStore();
   const { user, isAuthenticated } = useAuthStore();
@@ -68,10 +70,101 @@ const Profile: React.FC = () => {
   const [avatarFile, setAvatarFile] = useState<File | null>(null);
   const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
   const [isUploadingAvatar, setIsUploadingAvatar] = useState(false);
+  const [pendingScrollToRecipe, setPendingScrollToRecipe] = useState<number | null>(null);
 
   useEffect(() => {
     window.scrollTo(0, 0);
   }, [user]);
+
+  // Получаем данные из location state
+  useEffect(() => {
+    const state = location.state as {
+      scrollToRecipeId?: number;
+      commentId?: number;
+      notificationType?: string;
+    };
+    if (state?.scrollToRecipeId) {
+      setPendingScrollToRecipe(state.scrollToRecipeId);
+      setSelectedCategory('all');
+      setActiveTab('recipes');
+
+      // Сохраняем тип уведомления и ID комментария
+      if (state.notificationType) {
+        sessionStorage.setItem('notificationType', state.notificationType);
+      }
+      if (state.commentId) {
+        sessionStorage.setItem('commentId', state.commentId.toString());
+      }
+
+      window.history.replaceState({}, document.title);
+    }
+  }, [location]);
+
+  // Скроллим к нужному элементу
+  useEffect(() => {
+    if (
+      pendingScrollToRecipe &&
+      filteredRecipes.length > 0 &&
+      !isLoading &&
+      activeTab === 'recipes'
+    ) {
+      const recipeId = pendingScrollToRecipe;
+      const notificationType = sessionStorage.getItem('notificationType');
+      const commentId = sessionStorage.getItem('commentId');
+
+      const timer = setTimeout(() => {
+        const recipeElement = document.getElementById(`recipe-${recipeId}`);
+
+        if (recipeElement) {
+          // Для комментариев и ответов открываем комментарии
+          if (notificationType === 'comment' || notificationType === 'reply') {
+            setShowComments(recipeId);
+
+            // Ждём загрузки комментариев
+            setTimeout(() => {
+              if (commentId) {
+                const commentElement = document.getElementById(`comment-${commentId}`);
+                if (commentElement) {
+                  commentElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                  commentElement.classList.add('highlighted');
+                  setTimeout(() => commentElement.classList.remove('highlighted'), 2000);
+                }
+              } else {
+                // Если нет ID комментария, скроллим к секции комментариев
+                const commentsSection = recipeElement.querySelector('.comments-section');
+                if (commentsSection) {
+                  commentsSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                }
+              }
+            }, 500); // Даём время на загрузку комментариев
+          } else if (notificationType === 'like') {
+            // Для лайка скроллим к самому рецепту и подсвечиваем кнопку лайка
+            recipeElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+
+            setTimeout(() => {
+              const likeButton = recipeElement.querySelector('.like-btn');
+              if (likeButton) {
+                likeButton.classList.add('highlighted-like');
+                setTimeout(() => likeButton.classList.remove('highlighted-like'), 2000);
+              }
+            }, 300);
+          } else {
+            // По умолчанию просто скроллим к рецепту
+            recipeElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            recipeElement.classList.add('highlighted');
+            setTimeout(() => recipeElement.classList.remove('highlighted'), 2000);
+          }
+
+          // Очищаем sessionStorage
+          sessionStorage.removeItem('notificationType');
+          sessionStorage.removeItem('commentId');
+          setPendingScrollToRecipe(null);
+        }
+      }, 300);
+
+      return () => clearTimeout(timer);
+    }
+  }, [pendingScrollToRecipe, filteredRecipes, isLoading, activeTab, comments]);
 
   useEffect(() => {
     fetchProfile();
@@ -378,7 +471,7 @@ const Profile: React.FC = () => {
             ) : (
               <div className='my-recipes-feed'>
                 {filteredRecipes.map(recipe => (
-                  <div key={recipe.id} className='recipe-post'>
+                  <div key={recipe.id} id={`recipe-${recipe.id}`} className='recipe-post'>
                     <div className='post-content'>
                       <h3 className='recipe-title' onClick={() => openRecipe(recipe.id)}>
                         {recipe.title}
@@ -482,7 +575,11 @@ const Profile: React.FC = () => {
                               <div className='loading'>Загрузка комментариев...</div>
                             ) : comments[recipe.id]?.length > 0 ? (
                               comments[recipe.id].map(comment => (
-                                <div key={comment.id} className='comment'>
+                                <div
+                                  key={comment.id}
+                                  id={`comment-${comment.id}`}
+                                  className='comment'
+                                >
                                   <div className='comment-header'>
                                     <span
                                       className='comment-author'
@@ -554,7 +651,11 @@ const Profile: React.FC = () => {
                                   {comment.replies && comment.replies.length > 0 && (
                                     <div className='replies'>
                                       {comment.replies.map(reply => (
-                                        <div key={reply.id} className='comment reply'>
+                                        <div
+                                          key={reply.id}
+                                          id={`comment-${reply.id}`}
+                                          className='comment reply'
+                                        >
                                           <div className='comment-header'>
                                             <span
                                               className='comment-author'
