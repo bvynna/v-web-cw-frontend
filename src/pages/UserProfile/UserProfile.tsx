@@ -11,12 +11,16 @@ import LikesList from '../../components/Recipes/LikesList';
 import './UserProfile.css';
 
 const CATEGORIES = [
+  { value: 'all', label: '📝 Все рецепты' },
   { value: 'breakfast', label: '🍳 Завтрак' },
-  { value: 'lunch', label: '🍽️ Обед' },
-  { value: 'dinner', label: '🍖 Ужин' },
+  { value: 'lunch', label: '🍲 Обед' },
+  { value: 'dinner', label: '🍽️ Ужин' },
   { value: 'dessert', label: '🍰 Десерт' },
   { value: 'snack', label: '🥨 Перекус' },
-  { value: 'drink', label: '🍹 Напиток' },
+  { value: 'drink', label: '🥤 Напиток' },
+  { value: 'salad', label: '🥗 Салат' },
+  { value: 'soup', label: '🍜 Суп' },
+  { value: 'bakery', label: '🥐 Выпечка' },
 ];
 
 interface UserProfile {
@@ -83,6 +87,16 @@ const UserProfile: React.FC = () => {
   const [showSubscribersModal, setShowSubscribersModal] = useState(false);
   const [showLikesModal, setShowLikesModal] = useState(false);
   const [selectedRecipeIdForLikes, setSelectedRecipeIdForLikes] = useState<number | null>(null);
+  const [selectedCategory, setSelectedCategory] = useState<string>('all');
+  const [filteredRecipes, setFilteredRecipes] = useState<Recipe[]>([]);
+
+  useEffect(() => {
+    if (selectedCategory === 'all') {
+      setFilteredRecipes(userRecipes);
+    } else {
+      setFilteredRecipes(userRecipes.filter(recipe => recipe.category === selectedCategory));
+    }
+  }, [selectedCategory, userRecipes]);
 
   useEffect(() => {
     if (userProfile) {
@@ -440,247 +454,275 @@ const UserProfile: React.FC = () => {
           )}
         </div>
       </div>
+      <div className='profile-content'>
+        <div className='recipes-tab'>
+          <div className='recipes-header'>
+            <h2>Рецепты пользователя</h2>
 
-      <div className='recipes-section'>
-        <h2>Рецепты пользователя ({userRecipes.length})</h2>
-        {userRecipes.length === 0 ? (
-          <p className='no-recipes'>У пользователя пока нет рецептов</p>
-        ) : (
-          <div className='recipes-feed'>
-            {userRecipes.map(recipe => (
-              <div key={recipe.id} id={`recipe-${recipe.id}`} className='recipe-post'>
-                <div className='post-content'>
-                  <h3 className='recipe-title' onClick={() => toggleRecipe(recipe.id)}>
-                    {recipe.title}
-                    <span className='expand-icon'>
-                      {expandedRecipeId === recipe.id ? '▼' : '▶'}
-                    </span>
-                  </h3>
-                  <p className='recipe-description'>{recipe.description}</p>
-                  {recipe.imageUrl && (
-                    <div className='recipe-image-container'>
-                      <img src={`http://localhost:5000${recipe.imageUrl}`} alt={recipe.title} />
-                    </div>
-                  )}
-                  <div className='post-header'>
-                    <div className='author-info'>
-                      <span className='author-name'>{userProfile.name}</span>
-                      <span className='post-date'>{formatDate(recipe.createdAt)}</span>
-                    </div>
-                    <div className='post-meta'>
-                      <span className='recipe-category'>
-                        {getCategoryIcon(recipe.category)}{' '}
-                        {CATEGORIES.find(c => c.value === recipe.category)?.label.split(' ')[1]}
+            {/* Фильтр по категориям */}
+            <div className='category-filters'>
+              {CATEGORIES.map(category => (
+                <button
+                  key={category.value}
+                  className={`category-filter ${selectedCategory === category.value ? 'active' : ''}`}
+                  onClick={() => setSelectedCategory(category.value)}
+                >
+                  {category.label}
+                </button>
+              ))}
+            </div>
+          </div>
+          {filteredRecipes.length === 0 ? (
+            <p className='no-recipes'>
+              {selectedCategory === 'all'
+                ? 'У пользователя пока нет рецептов'
+                : 'Нет рецептов в этой категории'}
+            </p>
+          ) : (
+            <div className='recipes-feed'>
+              {userRecipes.map(recipe => (
+                <div key={recipe.id} id={`recipe-${recipe.id}`} className='recipe-post'>
+                  <div className='post-content'>
+                    <h3 className='recipe-title' onClick={() => toggleRecipe(recipe.id)}>
+                      {recipe.title}
+                      <span className='expand-icon'>
+                        {expandedRecipeId === recipe.id ? '▼' : '▶'}
                       </span>
-                    </div>
-                    <div className='post-actions'>
-                      <button
-                        className={`like-btn ${favoriteStatus[recipe.id] ? 'liked' : ''}`}
-                        onClick={() => handleLike(recipe.id)}
-                        title={
-                          favoriteStatus[recipe.id]
-                            ? 'Удалить из избранного'
-                            : 'Добавить в избранное'
-                        }
-                      >
-                        {favoriteStatus[recipe.id] ? '❤️' : '🤍'} {recipe.likes}
-                      </button>
-                      <button
-                        className='comments-btn'
-                        onClick={() => toggleComments(recipe.id)}
-                        title='Комментарии'
-                      >
-                        💬 {recipe.commentCount || 0}
-                      </button>
-                      {recipe.likes > 0 && (
-                        <div className='likes-info'>
-                          <span className='likes-link' onClick={() => handleShowLikes(recipe.id)}>
-                            Посмотреть все лайки ({recipe.likes})
-                          </span>
+                    </h3>
+                    <p className='recipe-description'>{recipe.description}</p>
+                    {recipe.imageUrl && (
+                      <div className='recipe-image-container'>
+                        <div className='recipe-image'>
+                          <img src={`http://localhost:5000${recipe.imageUrl}`} alt={recipe.title} />
                         </div>
-                      )}
-                    </div>
-                  </div>
-
-                  {expandedRecipeId === recipe.id && (
-                    <div className='recipe-details'>
-                      <div className='ingredients-section'>
-                        <h4>Ингредиенты:</h4>
-                        <ul className='ingredients-list'>
-                          {recipe.ingredients.split('\n').map((ingredient, index) => (
-                            <li key={index}>{ingredient.trim()}</li>
-                          ))}
-                        </ul>
                       </div>
-                      <div className='instructions-section'>
-                        <h4>Приготовление:</h4>
-                        <ol className='instructions-list'>
-                          {recipe.instructions.split('\n').map((instruction, index) => (
-                            <li key={index}>{instruction.trim()}</li>
-                          ))}
-                        </ol>
+                    )}
+                    <div className='post-header'>
+                      <div className='author-info'>
+                        <span className='author-name'>{userProfile.name}</span>
+                        <span className='post-date'>{formatDate(recipe.createdAt)}</span>
                       </div>
-                    </div>
-                  )}
-
-                  {showComments === recipe.id && (
-                    <div className='comments-section'>
-                      <h4>Комментарии ({comments[recipe.id]?.length || 0})</h4>
-
-                      {isAuthenticated ? (
-                        <form
-                          onSubmit={e => handleAddComment(recipe.id, e)}
-                          className='comment-form'
+                      <div className='post-meta'>
+                        <span className='recipe-category'>
+                          {getCategoryIcon(recipe.category)}{' '}
+                          {CATEGORIES.find(c => c.value === recipe.category)?.label.split(' ')[1]}
+                        </span>
+                      </div>
+                      <div className='post-actions'>
+                        <button
+                          className={`like-btn ${favoriteStatus[recipe.id] ? 'liked' : ''}`}
+                          onClick={() => handleLike(recipe.id)}
+                          title={
+                            favoriteStatus[recipe.id]
+                              ? 'Удалить из избранного'
+                              : 'Добавить в избранное'
+                          }
                         >
-                          <textarea
-                            placeholder='Напишите комментарий...'
-                            value={newComment}
-                            onChange={e => setNewComment(e.target.value)}
-                            rows={3}
-                            required
-                          />
-                          <button type='submit' disabled={!newComment.trim()}>
-                            Отправить
-                          </button>
-                        </form>
-                      ) : (
-                        <p className='login-to-comment'>Войдите, чтобы оставить комментарий</p>
-                      )}
-
-                      <div className='comments-list'>
-                        {commentsLoading ? (
-                          <div className='loading'>Загрузка комментариев...</div>
-                        ) : comments[recipe.id]?.length > 0 ? (
-                          comments[recipe.id].map(comment => (
-                            <div key={comment.id} id={`comment-${comment.id}`} className='comment'>
-                              <div className='comment-header'>
-                                <span
-                                  className='comment-author'
-                                  onClick={() => {
-                                    if (comment.author.id !== currentUser?.id) {
-                                      navigate(`/user/${comment.author.id}`);
-                                    } else {
-                                      navigate('/profile');
-                                    }
-                                  }}
-                                  style={{
-                                    cursor: 'pointer',
-                                    color: '#007bff',
-                                    fontWeight: '600',
-                                  }}
-                                >
-                                  {comment.author.name}
-                                </span>
-                                <span className='comment-date'>
-                                  {formatCommentDate(comment.createdAt)}
-                                </span>
-                                {currentUser?.id === comment.author.id && (
-                                  <button
-                                    className='delete-comment-btn'
-                                    onClick={() => handleDeleteComment(recipe.id, comment.id)}
-                                    title='Удалить комментарий'
-                                  >
-                                    🗑️
-                                  </button>
-                                )}
-                              </div>
-                              <p className='comment-content'>{comment.content}</p>
-                              <div className='comment-actions'>
-                                <button
-                                  className='reply-btn'
-                                  onClick={() => handleReply(comment.id)}
-                                  title='Ответить'
-                                >
-                                  💬 Ответить
-                                </button>
-                                {comment.replyCount > 0 && (
-                                  <button className='view-replies-btn' title='Показать ответы'>
-                                    📂 {comment.replyCount}{' '}
-                                    {comment.replyCount === 1 ? 'ответ' : 'ответов'}
-                                  </button>
-                                )}
-                              </div>
-
-                              {replyingTo === comment.id && (
-                                <form
-                                  onSubmit={e => handleAddReply(recipe.id, comment.id, e)}
-                                  className='reply-form'
-                                >
-                                  <textarea
-                                    placeholder='Напишите ответ...'
-                                    value={replyContent}
-                                    onChange={e => setReplyContent(e.target.value)}
-                                    rows={2}
-                                    required
-                                  />
-                                  <div className='reply-actions'>
-                                    <button type='submit' disabled={!replyContent.trim()}>
-                                      Отправить
-                                    </button>
-                                    <button type='button' onClick={() => setReplyingTo(null)}>
-                                      Отмена
-                                    </button>
-                                  </div>
-                                </form>
-                              )}
-
-                              {comment.replies && comment.replies.length > 0 && (
-                                <div className='replies'>
-                                  {comment.replies.map(reply => (
-                                    <div
-                                      key={reply.id}
-                                      id={`comment-${reply.id}`}
-                                      className='comment reply'
-                                    >
-                                      <div className='comment-header'>
-                                        <span
-                                          className='comment-author'
-                                          onClick={() => {
-                                            if (reply.author.id !== currentUser?.id) {
-                                              navigate(`/user/${reply.author.id}`);
-                                            } else {
-                                              navigate('/profile');
-                                            }
-                                          }}
-                                          style={{
-                                            cursor: 'pointer',
-                                            color: '#007bff',
-                                            fontWeight: '600',
-                                          }}
-                                        >
-                                          {reply.author.name}
-                                        </span>
-                                        <span className='comment-date'>
-                                          {formatCommentDate(reply.createdAt)}
-                                        </span>
-                                        {currentUser?.id === reply.author.id && (
-                                          <button
-                                            className='delete-comment-btn'
-                                            onClick={() => handleDeleteComment(recipe.id, reply.id)}
-                                            title='Удалить ответ'
-                                          >
-                                            🗑️
-                                          </button>
-                                        )}
-                                      </div>
-                                      <p className='comment-content'>{reply.content}</p>
-                                    </div>
-                                  ))}
-                                </div>
-                              )}
-                            </div>
-                          ))
-                        ) : (
-                          <p className='no-comments'>Пока нет комментариев</p>
+                          {favoriteStatus[recipe.id] ? '❤️' : '🤍'} {recipe.likes}
+                        </button>
+                        <button
+                          className='comments-btn'
+                          onClick={() => toggleComments(recipe.id)}
+                          title='Комментарии'
+                        >
+                          💬 {recipe.commentCount || 0}
+                        </button>
+                        {recipe.likes > 0 && (
+                          <div className='likes-info'>
+                            <span className='likes-link' onClick={() => handleShowLikes(recipe.id)}>
+                              Посмотреть все лайки ({recipe.likes})
+                            </span>
+                          </div>
                         )}
                       </div>
                     </div>
-                  )}
+
+                    {expandedRecipeId === recipe.id && (
+                      <div className='recipe-details'>
+                        <div className='ingredients-section'>
+                          <h4>Ингредиенты:</h4>
+                          <ul className='ingredients-list'>
+                            {recipe.ingredients.split('\n').map((ingredient, index) => (
+                              <li key={index}>{ingredient.trim()}</li>
+                            ))}
+                          </ul>
+                        </div>
+                        <div className='instructions-section'>
+                          <h4>Приготовление:</h4>
+                          <ol className='instructions-list'>
+                            {recipe.instructions.split('\n').map((instruction, index) => (
+                              <li key={index}>{instruction.trim()}</li>
+                            ))}
+                          </ol>
+                        </div>
+                      </div>
+                    )}
+
+                    {showComments === recipe.id && (
+                      <div className='comments-section'>
+                        <h4>Комментарии ({comments[recipe.id]?.length || 0})</h4>
+
+                        {isAuthenticated ? (
+                          <form
+                            onSubmit={e => handleAddComment(recipe.id, e)}
+                            className='comment-form'
+                          >
+                            <textarea
+                              placeholder='Напишите комментарий...'
+                              value={newComment}
+                              onChange={e => setNewComment(e.target.value)}
+                              rows={3}
+                              required
+                            />
+                            <button type='submit' disabled={!newComment.trim()}>
+                              Отправить
+                            </button>
+                          </form>
+                        ) : (
+                          <p className='login-to-comment'>Войдите, чтобы оставить комментарий</p>
+                        )}
+
+                        <div className='comments-list'>
+                          {commentsLoading ? (
+                            <div className='loading'>Загрузка комментариев...</div>
+                          ) : comments[recipe.id]?.length > 0 ? (
+                            comments[recipe.id].map(comment => (
+                              <div
+                                key={comment.id}
+                                id={`comment-${comment.id}`}
+                                className='comment'
+                              >
+                                <div className='comment-header'>
+                                  <span
+                                    className='comment-author'
+                                    onClick={() => {
+                                      if (comment.author.id !== currentUser?.id) {
+                                        navigate(`/user/${comment.author.id}`);
+                                      } else {
+                                        navigate('/profile');
+                                      }
+                                    }}
+                                    style={{
+                                      cursor: 'pointer',
+                                      color: '#007bff',
+                                      fontWeight: '600',
+                                    }}
+                                  >
+                                    {comment.author.name}
+                                  </span>
+                                  <span className='comment-date'>
+                                    {formatCommentDate(comment.createdAt)}
+                                  </span>
+                                  {currentUser?.id === comment.author.id && (
+                                    <button
+                                      className='delete-comment-btn'
+                                      onClick={() => handleDeleteComment(recipe.id, comment.id)}
+                                      title='Удалить комментарий'
+                                    >
+                                      🗑️
+                                    </button>
+                                  )}
+                                </div>
+                                <p className='comment-content'>{comment.content}</p>
+                                <div className='comment-actions'>
+                                  <button
+                                    className='reply-btn'
+                                    onClick={() => handleReply(comment.id)}
+                                    title='Ответить'
+                                  >
+                                    💬 Ответить
+                                  </button>
+                                  {comment.replyCount > 0 && (
+                                    <button className='view-replies-btn' title='Показать ответы'>
+                                      📂 {comment.replyCount}{' '}
+                                      {comment.replyCount === 1 ? 'ответ' : 'ответов'}
+                                    </button>
+                                  )}
+                                </div>
+
+                                {replyingTo === comment.id && (
+                                  <form
+                                    onSubmit={e => handleAddReply(recipe.id, comment.id, e)}
+                                    className='reply-form'
+                                  >
+                                    <textarea
+                                      placeholder='Напишите ответ...'
+                                      value={replyContent}
+                                      onChange={e => setReplyContent(e.target.value)}
+                                      rows={2}
+                                      required
+                                    />
+                                    <div className='reply-actions'>
+                                      <button type='submit' disabled={!replyContent.trim()}>
+                                        Отправить
+                                      </button>
+                                      <button type='button' onClick={() => setReplyingTo(null)}>
+                                        Отмена
+                                      </button>
+                                    </div>
+                                  </form>
+                                )}
+
+                                {comment.replies && comment.replies.length > 0 && (
+                                  <div className='replies'>
+                                    {comment.replies.map(reply => (
+                                      <div
+                                        key={reply.id}
+                                        id={`comment-${reply.id}`}
+                                        className='comment reply'
+                                      >
+                                        <div className='comment-header'>
+                                          <span
+                                            className='comment-author'
+                                            onClick={() => {
+                                              if (reply.author.id !== currentUser?.id) {
+                                                navigate(`/user/${reply.author.id}`);
+                                              } else {
+                                                navigate('/profile');
+                                              }
+                                            }}
+                                            style={{
+                                              cursor: 'pointer',
+                                              color: '#007bff',
+                                              fontWeight: '600',
+                                            }}
+                                          >
+                                            {reply.author.name}
+                                          </span>
+                                          <span className='comment-date'>
+                                            {formatCommentDate(reply.createdAt)}
+                                          </span>
+                                          {currentUser?.id === reply.author.id && (
+                                            <button
+                                              className='delete-comment-btn'
+                                              onClick={() =>
+                                                handleDeleteComment(recipe.id, reply.id)
+                                              }
+                                              title='Удалить ответ'
+                                            >
+                                              🗑️
+                                            </button>
+                                          )}
+                                        </div>
+                                        <p className='comment-content'>{reply.content}</p>
+                                      </div>
+                                    ))}
+                                  </div>
+                                )}
+                              </div>
+                            ))
+                          ) : (
+                            <p className='no-comments'>Пока нет комментариев</p>
+                          )}
+                        </div>
+                      </div>
+                    )}
+                  </div>
                 </div>
-              </div>
-            ))}
-          </div>
-        )}
+              ))}
+            </div>
+          )}
+        </div>
       </div>
       {showSubscribersModal && userProfile && (
         <SubscribersList userId={userProfile.id} onClose={() => setShowSubscribersModal(false)} />

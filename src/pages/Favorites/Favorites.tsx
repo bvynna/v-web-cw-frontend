@@ -67,21 +67,19 @@ const Favorites: React.FC = () => {
   useEffect(() => {
     let result = favorites;
 
+    if (searchQuery.trim()) {
+      result = result.filter(recipe =>
+        recipe.title.toLowerCase().includes(searchQuery.toLowerCase()),
+      );
+    }
+
     if (selectedCategory !== 'all') {
       result = result.filter(recipe => recipe.category === selectedCategory);
     }
 
-    if (searchQuery.trim()) {
-      const query = searchQuery.toLowerCase().trim();
-      result = result.filter(
-        recipe =>
-          recipe.title.toLowerCase().includes(query) ||
-          recipe.description.toLowerCase().includes(query),
-      );
-    }
-
     setFilteredFavorites(result);
-  }, [favorites, selectedCategory, searchQuery]);
+  }, [favorites, searchQuery, selectedCategory]);
+
   const handleReply = (commentId: number): void => {
     setReplyingTo(replyingTo === commentId ? null : commentId);
     setReplyContent('');

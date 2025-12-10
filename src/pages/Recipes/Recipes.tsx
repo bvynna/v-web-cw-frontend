@@ -70,21 +70,18 @@ const Recipes: React.FC = () => {
   useEffect(() => {
     let result = recipes;
 
+    if (searchQuery.trim()) {
+      result = result.filter(recipe =>
+        recipe.title.toLowerCase().includes(searchQuery.toLowerCase()),
+      );
+    }
+
     if (selectedCategory !== 'all') {
       result = result.filter(recipe => recipe.category === selectedCategory);
     }
 
-    if (searchQuery.trim()) {
-      const query = searchQuery.toLowerCase().trim();
-      result = result.filter(
-        recipe =>
-          recipe.title.toLowerCase().includes(query) ||
-          recipe.description.toLowerCase().includes(query),
-      );
-    }
-
     setFilteredRecipes(result);
-  }, [recipes, selectedCategory, searchQuery]);
+  }, [recipes, searchQuery, selectedCategory]);
 
   useEffect(() => {
     if (!isAuthenticated) {

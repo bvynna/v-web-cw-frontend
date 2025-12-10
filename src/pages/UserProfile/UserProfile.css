@@ -1,3 +1,97 @@
+.recipe-image {
+  margin: 1rem 0;
+  border-radius: 8px;
+  overflow: hidden;
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  background-color: #f8f9fa;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.recipe-image img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 8px;
+}
+.recipe-image-container {
+  max-width: 500px;
+  margin: 1rem auto;
+}
+.recipes-section {
+  margin-top: 40px;
+}
+
+.recipes-section h2 {
+  font-size: 24px;
+  margin-bottom: 20px;
+  color: #333;
+}
+
+.category-filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  justify-content: center;
+  margin-bottom: 1rem;
+}
+
+.category-filter {
+  padding: 0.5rem 1rem;
+  border: 2px solid #e1e5e9;
+  border-radius: 25px;
+  background: white;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  font-size: 0.9rem;
+  white-space: nowrap;
+}
+
+.category-btn {
+  padding: 10px 20px;
+  border: 2px solid transparent;
+  background: white;
+  border-radius: 24px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 600;
+  transition: all 0.3s ease;
+  color: #666;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.category-filter:hover {
+  background: #f8f9fa;
+  border-color: #007bff;
+  transform: translateY(-2px);
+}
+
+.category-filter.active {
+  background: #007bff;
+  color: white;
+  border-color: #007bff;
+  transform: translateY(-2px);
+}
+
+.recipes-header {
+  text-align: center;
+  margin-bottom: 2rem;
+}
+.no-recipes {
+  text-align: center;
+  padding: 60px 20px;
+  color: #999;
+  font-size: 16px;
+  font-style: italic;
+}
+
+.recipes-feed {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
 .likes-info {
   margin-top: 8px;
   padding: 0 16px;
@@ -264,11 +358,21 @@
 }
 
 .user-profile-container {
-  max-width: 800px;
+  max-width: 1000px;
   margin: 0 auto;
   padding: 2rem 1rem;
 }
+.profile-content {
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  overflow: hidden;
+}
 
+.recipes-tab,
+.settings-tab {
+  padding: 2rem;
+}
 .profile-header {
   display: flex;
   align-items: center;
