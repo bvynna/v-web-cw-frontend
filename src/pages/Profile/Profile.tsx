@@ -498,6 +498,12 @@ const Profile: React.FC = () => {
                     <div className='post-content'>
                       <h3 className='recipe-title' onClick={() => openRecipe(recipe.id)}>
                         {recipe.title}
+                        <div className='post-meta'>
+                          <span className='recipe-category'>
+                            {getCategoryIcon(recipe.category)}{' '}
+                            {CATEGORIES.find(c => c.value === recipe.category)?.label.split(' ')[1]}
+                          </span>
+                        </div>
                         <span className='expand-icon'>
                           {expandedRecipeId === recipe.id ? '▼' : '▶'}
                         </span>
@@ -517,12 +523,6 @@ const Profile: React.FC = () => {
                         <div className='author-info'>
                           <span className='author-name'>{profile?.name}</span>
                           <span className='post-date'>{formatDate(recipe.createdAt)}</span>
-                        </div>
-                        <div className='post-meta'>
-                          <span className='recipe-category'>
-                            {getCategoryIcon(recipe.category)}{' '}
-                            {CATEGORIES.find(c => c.value === recipe.category)?.label.split(' ')[1]}
-                          </span>
                         </div>
                         <div className='post-actions'>
                           <button

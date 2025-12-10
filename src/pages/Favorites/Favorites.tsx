@@ -256,6 +256,12 @@ const Favorites: React.FC = () => {
                   {/* Название и описание вверху */}
                   <h3 className='recipe-title' onClick={() => toggleRecipe(recipe.id)}>
                     {recipe.title}
+                    <div className='post-meta'>
+                      <span className='recipe-category'>
+                        {getCategoryIcon(recipe.category)}{' '}
+                        {CATEGORIES.find(c => c.value === recipe.category)?.label.split(' ')[1]}
+                      </span>
+                    </div>
                     <span className='expand-icon'>
                       {expandedRecipeId === recipe.id ? '▼' : '▶'}
                     </span>
@@ -293,12 +299,7 @@ const Favorites: React.FC = () => {
                       </span>
                       <span className='post-date'>{formatDate(recipe.createdAt)}</span>
                     </div>
-                    <div className='post-meta'>
-                      <span className='recipe-category'>
-                        {getCategoryIcon(recipe.category)}{' '}
-                        {CATEGORIES.find(c => c.value === recipe.category)?.label.split(' ')[1]}
-                      </span>
-                    </div>
+
                     <div className='post-actions'>
                       <button
                         className='like-btn liked'
