@@ -529,9 +529,11 @@ const Profile: React.FC = () => {
                         </div>
                       )}
                       <div className='post-header'>
-                        <div className='author-info'>
-                          <span className='author-name'>{profile?.name}</span>
-                          <span className='post-date'>{formatDate(recipe.createdAt)}</span>
+                        <div className='post-header'>
+                          <div className='author-info'>
+                            <span className='author-name'>{profile?.name}</span>
+                            <span className='post-date'>{formatDate(recipe.createdAt)}</span>
+                          </div>
                         </div>
                         <div className='post-actions'>
                           <button

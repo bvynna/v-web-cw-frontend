@@ -354,3 +354,44 @@
 .clear-search-large-btn:hover {
   background: #0056b3;
 }
+
+@media (max-width: 768px) {
+  .favorites-container {
+    padding: 1rem 0.5rem;
+    overflow-x: hidden;
+  }
+
+  .favorites-header h1 {
+    font-size: 2rem;
+  }
+
+  .search-input-wrapper {
+    max-width: 100%;
+  }
+
+  .empty-favorites {
+    padding: 2rem 1rem;
+  }
+
+  .empty-icon {
+    font-size: 3rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .favorites-container {
+    padding: 0.5rem 0.25rem;
+  }
+
+  .favorites-header h1 {
+    font-size: 1.5rem;
+  }
+
+  .empty-favorites {
+    padding: 1.5rem 0.75rem;
+  }
+
+  .empty-icon {
+    font-size: 2.5rem;
+  }
+}

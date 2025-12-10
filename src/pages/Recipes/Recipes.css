@@ -620,26 +620,36 @@
 @media (max-width: 768px) {
   .recipes-container {
     padding: 1rem 0.5rem;
+    overflow-x: hidden;
   }
 
   .recipes-header h2 {
     font-size: 1.5rem;
   }
 
-  .category-filters {
-    gap: 0.3rem;
+  .category-filter {
+    padding: 12px;
   }
 
-  .category-filter {
-    padding: 0.4rem 0.8rem;
-    font-size: 0.8rem;
+  .category-btn {
+    padding: 8px 14px;
+    font-size: 12px;
+  }
+
+  .search-input-wrapper {
+    max-width: 100%;
+  }
+
+  .search-input {
+    padding: 0.65rem 2.5rem 0.65rem 1rem;
+    font-size: 0.9rem;
   }
 
   .post-header {
-    padding: 0.75rem 1rem;
     flex-direction: column;
-    gap: 0.5rem;
     align-items: flex-start;
+    gap: 8px;
+    padding: 0.75rem 1rem;
   }
 
   .author-info {
@@ -647,14 +657,13 @@
   }
 
   .post-meta {
+    width: 100%;
     margin: 0;
-    order: 2;
   }
 
   .post-actions {
     width: 100%;
-    justify-content: space-between;
-    order: 3;
+    justify-content: flex-start;
   }
 
   .post-content {
@@ -664,59 +673,36 @@
   .recipe-title {
     font-size: 1.1rem;
   }
-
-  .recipe-image img {
-    max-width: 100%;
-    height: auto;
-  }
 }
 
 @media (max-width: 480px) {
-  .category-filters {
-    justify-content: flex-start;
-    overflow-x: auto;
-    padding-bottom: 0.5rem;
+  .recipes-container {
+    padding: 0.5rem 0.25rem;
+  }
+
+  .recipes-header h2 {
+    font-size: 1.25rem;
   }
 
   .category-filter {
-    flex-shrink: 0;
+    padding: 8px;
+    gap: 6px;
+  }
+
+  .category-btn {
+    padding: 6px 10px;
+    font-size: 11px;
   }
 
   .post-header {
-    flex-direction: column;
-    align-items: stretch;
+    padding: 0.5rem;
   }
 
-  .author-info,
-  .post-meta,
-  .post-actions {
-    width: 100%;
-    justify-content: flex-start;
+  .post-content {
+    padding: 0.75rem;
   }
 
-  .post-meta {
-    order: 3;
-    margin-top: 0.5rem;
-  }
-
-  .post-actions {
-    order: 2;
-    margin-top: 0.5rem;
-  }
-  .search-input-wrapper {
-    max-width: 100%;
-  }
-
-  .search-input {
-    padding: 0.75rem 2.5rem 0.75rem 1rem;
-    font-size: 0.9rem;
-  }
-
-  .empty-search-results {
-    padding: 2rem 1rem;
-  }
-
-  .empty-search-icon {
-    font-size: 2.5rem;
+  .recipe-title {
+    font-size: 1rem;
   }
 }

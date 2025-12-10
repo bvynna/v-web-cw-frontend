@@ -509,9 +509,11 @@ const UserProfile: React.FC = () => {
                       </div>
                     )}
                     <div className='post-header'>
-                      <div className='author-info'>
-                        <span className='author-name'>{userProfile.name}</span>
-                        <span className='post-date'>{formatDate(recipe.createdAt)}</span>
+                      <div className='post-header'>
+                        <div className='author-info'>
+                          <span className='author-name'>{userProfile.name}</span>
+                          <span className='post-date'>{formatDate(recipe.createdAt)}</span>
+                        </div>
                       </div>
 
                       <div className='post-actions'>

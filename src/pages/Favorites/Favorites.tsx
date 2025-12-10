@@ -289,26 +289,27 @@ const Favorites: React.FC = () => {
 
                   {/* Шапка с информацией и действиями под фото */}
                   <div className='post-header'>
-                    <div className='author-info'>
-                      <span
-                        className='author-name'
-                        onClick={e => {
-                          e.stopPropagation();
-                          if (recipe.author.id !== currentUser?.id) {
-                            navigate(`/user/${recipe.author.id}`);
-                          }
-                        }}
-                        style={{
-                          cursor: recipe.author.id !== currentUser?.id ? 'pointer' : 'default',
-                          color: recipe.author.id !== currentUser?.id ? '#007bff' : '#333',
-                        }}
-                        title={recipe.author.id !== currentUser?.id ? 'Посмотреть профиль' : ''}
-                      >
-                        {recipe.author.name}
-                      </span>
-                      <span className='post-date'>{formatDate(recipe.createdAt)}</span>
+                    <div className='post-header'>
+                      <div className='author-info'>
+                        <span
+                          className='author-name'
+                          onClick={e => {
+                            e.stopPropagation();
+                            if (recipe.author.id !== currentUser?.id) {
+                              navigate(`/user/${recipe.author.id}`);
+                            }
+                          }}
+                          style={{
+                            cursor: recipe.author.id !== currentUser?.id ? 'pointer' : 'default',
+                            color: recipe.author.id !== currentUser?.id ? '#007bff' : '#333',
+                          }}
+                          title={recipe.author.id !== currentUser?.id ? 'Посмотреть профиль' : ''}
+                        >
+                          {recipe.author.name}
+                        </span>
+                        <span className='post-date'>{formatDate(recipe.createdAt)}</span>
+                      </div>
                     </div>
-
                     <div className='post-actions'>
                       <button
                         className='like-btn liked'
