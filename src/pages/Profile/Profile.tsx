@@ -270,9 +270,18 @@ const Profile: React.FC = () => {
 
     try {
       await deleteComment(recipeId, commentId);
-      fetchMyRecipes();
+
+      await fetchComments(recipeId);
+
+      setFilteredRecipes(prevRecipes =>
+        prevRecipes.map(recipe =>
+          recipe.id === recipeId
+            ? { ...recipe, commentCount: Math.max(0, recipe.commentCount - 1) }
+            : recipe,
+        ),
+      );
     } catch (error) {
-      alert('Ошибка при удалении комментария');
+      alert('Не удалось удалить комментарий');
     }
   };
 

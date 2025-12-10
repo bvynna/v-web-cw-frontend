@@ -331,13 +331,18 @@ const UserProfile: React.FC = () => {
 
     try {
       await deleteComment(recipeId, commentId);
+
+      await fetchComments(recipeId);
+
       setUserRecipes(prevRecipes =>
         prevRecipes.map(recipe =>
-          recipe.id === recipeId ? { ...recipe, commentCount: recipe.commentCount - 1 } : recipe,
+          recipe.id === recipeId
+            ? { ...recipe, commentCount: Math.max(0, recipe.commentCount - 1) }
+            : recipe,
         ),
       );
     } catch (error) {
-      alert('Ошибка при удалении комментария');
+      alert('Не удалось удалить комментарий');
     }
   };
 

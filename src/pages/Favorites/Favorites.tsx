@@ -161,9 +161,18 @@ const Favorites: React.FC = () => {
 
     try {
       await deleteComment(recipeId, commentId);
-      fetchFavorites();
+
+      await fetchComments(recipeId);
+
+      setFilteredFavorites(prevFavorites =>
+        prevFavorites.map(recipe =>
+          recipe.id === recipeId
+            ? { ...recipe, commentCount: Math.max(0, recipe.commentCount - 1) }
+            : recipe,
+        ),
+      );
     } catch (error) {
-      alert('Ошибка при удалении комментария');
+      alert('Не удалось удалить комментарий');
     }
   };
 
