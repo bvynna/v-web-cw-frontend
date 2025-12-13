@@ -271,6 +271,10 @@ const UserProfile: React.FC = () => {
   };
 
   const handleLike = async (recipeId: number): Promise<void> => {
+    if (!isAuthenticated) {
+      alert('Войдите в аккаунт чтобы добавлять в избранное');
+      return;
+    }
     try {
       if (favoriteStatus[recipeId]) {
         await removeFromFavorites(recipeId);
