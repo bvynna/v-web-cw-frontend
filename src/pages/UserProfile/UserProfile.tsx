@@ -637,13 +637,27 @@ const UserProfile: React.FC = () => {
                                 </div>
                                 <p className='comment-content'>{comment.content}</p>
                                 <div className='comment-actions'>
-                                  <button
-                                    className='reply-btn'
-                                    onClick={() => handleReply(comment.id)}
-                                    title='Ответить'
-                                  >
-                                    💬 Ответить
-                                  </button>
+                                  {isAuthenticated ? (
+                                    <button
+                                      className='reply-btn'
+                                      onClick={() => handleReply(comment.id)}
+                                      title='Ответить'
+                                    >
+                                      💬 Ответить
+                                    </button>
+                                  ) : (
+                                    <button
+                                      className='reply-btn disabled'
+                                      onClick={() => {
+                                        alert(
+                                          'Пожалуйста, войдите в аккаунт для ответа на комментарии',
+                                        );
+                                        navigate('/login');
+                                      }}
+                                    >
+                                      💬 Ответить
+                                    </button>
+                                  )}
                                   {comment.replyCount > 0 && (
                                     <button className='view-replies-btn' title='Показать ответы'>
                                       📂 {comment.replyCount}{' '}
