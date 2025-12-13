@@ -508,14 +508,14 @@ const UserProfile: React.FC = () => {
                         </div>
                       </div>
                     )}
-                    <div className='post-header'>
-                      <div className='post-header'>
-                        <div className='author-info'>
-                          <span className='author-name'>{userProfile.name}</span>
-                          <span className='post-date'>{formatDate(recipe.createdAt)}</span>
-                        </div>
-                      </div>
 
+                    <div className='post-header'>
+                      <div className='author-info'>
+                        <span className='author-name'>{userProfile.name}</span>
+                        <span className='post-date'>{formatDate(recipe.createdAt)}</span>
+                      </div>
+                    </div>
+                    <div className='post-header'>
                       <div className='post-actions'>
                         <button
                           className={`like-btn ${favoriteStatus[recipe.id] ? 'liked' : ''}`}
@@ -538,7 +538,7 @@ const UserProfile: React.FC = () => {
                         {recipe.likes > 0 && (
                           <div className='likes-info'>
                             <span className='likes-link' onClick={() => handleShowLikes(recipe.id)}>
-                              Посмотреть все лайки ({recipe.likes})
+                              Посмотреть лайки
                             </span>
                           </div>
                         )}

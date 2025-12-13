@@ -519,7 +519,7 @@
   }
 
   .likes-link {
-    display: none !important;
+    display: flex !important;
   }
 
   .post-content {

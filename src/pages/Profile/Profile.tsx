@@ -529,12 +529,12 @@ const Profile: React.FC = () => {
                         </div>
                       )}
                       <div className='post-header'>
-                        <div className='post-header'>
-                          <div className='author-info'>
-                            <span className='author-name'>{profile?.name}</span>
-                            <span className='post-date'>{formatDate(recipe.createdAt)}</span>
-                          </div>
+                        <div className='author-info'>
+                          <span className='author-name'>{profile?.name}</span>
+                          <span className='post-date'>{formatDate(recipe.createdAt)}</span>
                         </div>
+                      </div>
+                      <div className='post-header'>
                         <div className='post-actions'>
                           <button
                             className={`like-btn ${favoriteStatus[recipe.id] ? 'liked' : ''}`}
@@ -566,7 +566,7 @@ const Profile: React.FC = () => {
                                 className='likes-link'
                                 onClick={() => handleShowLikes(recipe.id)}
                               >
-                                Посмотреть все лайки ({recipe.likes})
+                                Посмотреть лайки
                               </span>
                             </div>
                           )}
@@ -720,9 +720,6 @@ const Profile: React.FC = () => {
                                             >
                                               {reply.author.name}
                                             </span>
-                                            <span className='comment-date'>
-                                              {formatCommentDate(reply.createdAt)}
-                                            </span>
                                             {user?.id === reply.author.id && (
                                               <button
                                                 className='delete-comment-btn'
@@ -733,6 +730,11 @@ const Profile: React.FC = () => {
                                                 🗑️
                                               </button>
                                             )}
+                                          </div>
+                                          <div className='comment-header'>
+                                            <span className='comment-date'>
+                                              {formatCommentDate(reply.createdAt)}
+                                            </span>
                                           </div>
                                           <p className='comment-content'>{reply.content}</p>
                                         </div>
