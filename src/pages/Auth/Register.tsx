@@ -7,23 +7,28 @@ const Register: React.FC = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [name, setName] = useState('');
+  const [error, setError] = useState('');
   const { register } = useAuthStore();
   const navigate = useNavigate();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setError('');
+
     try {
       await register(email, password, name);
       navigate('/');
-    } catch (error) {
-      alert('Ошибка регистрации');
+    } catch (error: any) {
+      const errorMessage = error.response?.data?.error || 'Ошибка регистрации';
+      setError(errorMessage);
     }
   };
 
   return (
     <div className='auth-container'>
-      <form onSubmit={handleSubmit} className='auth-form'>
+      <form className='auth-form' onSubmit={handleSubmit}>
         <h2>Регистрация</h2>
+        {error && <div className='error-message'>{error}</div>}
         <input
           type='text'
           placeholder='Имя'
