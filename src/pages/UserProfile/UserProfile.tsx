@@ -489,7 +489,7 @@ const UserProfile: React.FC = () => {
             </p>
           ) : (
             <div className='recipes-feed'>
-              {userRecipes.map(recipe => (
+              {filteredRecipes.map(recipe => (
                 <div key={recipe.id} id={`recipe-${recipe.id}`} className='recipe-post'>
                   <div className='post-content'>
                     <h3 className='recipe-title' onClick={() => toggleRecipe(recipe.id)}>
