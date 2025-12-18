@@ -149,7 +149,7 @@ const UserProfile: React.FC = () => {
         if (recipeElement) {
           if (notificationType === 'comment' || notificationType === 'reply') {
             setShowComments(recipeId);
-
+            fetchComments(recipeId);
             setTimeout(() => {
               if (commentId) {
                 const commentElement = document.getElementById(`comment-${commentId}`);
@@ -572,7 +572,7 @@ const UserProfile: React.FC = () => {
 
                     {showComments === recipe.id && (
                       <div className='comments-section'>
-                        <h4>Комментарии ({comments[recipe.id]?.length || 0})</h4>
+                        <h4>Комментарии ({recipe.commentCount || 0})</h4>
 
                         {isAuthenticated ? (
                           <form

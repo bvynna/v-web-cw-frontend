@@ -364,7 +364,7 @@ const Favorites: React.FC = () => {
                   {/* Комментарии */}
                   {showComments === recipe.id && (
                     <div className='comments-section'>
-                      <h4>Комментарии ({comments[recipe.id]?.length || 0})</h4>
+                      <h4>Комментарии ({recipe.commentCount || 0})</h4>
 
                       {isAuthenticated ? (
                         <form
