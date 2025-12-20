@@ -105,7 +105,7 @@ const Recipes: React.FC = () => {
     };
 
     checkFavorites();
-  }, [recipes, checkFavoriteStatus, isAuthenticated]);
+  }, [isAuthenticated]);
 
   const handleReply = (commentId: number): void => {
     setReplyingTo(replyingTo === commentId ? null : commentId);
