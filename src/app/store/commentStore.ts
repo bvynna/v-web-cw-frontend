@@ -105,17 +105,10 @@ export const useCommentStore = create<CommentState>((set, get) => ({
     try {
       const token = localStorage.getItem('token');
       await axios.delete(`http://localhost:5000/api/comments/${commentId}`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
+        headers: { Authorization: `Bearer ${token}` },
       });
 
-      set(state => ({
-        comments: {
-          ...state.comments,
-          [recipeId]: (state.comments[recipeId] || []).filter(comment => comment.id !== commentId),
-        },
-      }));
+      await get().fetchComments(recipeId);
     } catch (error: any) {
       console.error('Failed to delete comment:', error);
       throw error;

@@ -107,6 +107,18 @@ const Recipes: React.FC = () => {
     checkFavorites();
   }, [isAuthenticated]);
 
+  useEffect(() => {
+    const initComments = async () => {
+      for (const recipe of recipes) {
+        await fetchComments(recipe.id);
+      }
+    };
+
+    if (recipes.length > 0) {
+      initComments();
+    }
+  }, [recipes]);
+
   const handleReply = (commentId: number): void => {
     setReplyingTo(replyingTo === commentId ? null : commentId);
     setReplyContent('');
@@ -145,6 +157,11 @@ const Recipes: React.FC = () => {
 
   const clearSearch = (): void => {
     setSearchQuery('');
+  };
+
+  const getCommentCount = (recipeId: number): number => {
+    const recipeComments = comments[recipeId] || [];
+    return recipeComments.reduce((total, comment) => total + 1 + (comment.replies?.length || 0), 0);
   };
 
   const getCategoryIcon = (category: string): string => {
@@ -272,17 +289,7 @@ const Recipes: React.FC = () => {
 
     try {
       await deleteComment(recipeId, commentId);
-
-      await fetchComments(recipeId);
-
-      setFilteredRecipes(prevRecipes =>
-        prevRecipes.map(recipe =>
-          recipe.id === recipeId
-            ? { ...recipe, commentCount: Math.max(0, recipe.commentCount - 1) }
-            : recipe,
-        ),
-      );
-    } catch (error) {
+    } catch {
       alert('Не удалось удалить комментарий');
     }
   };
@@ -420,7 +427,7 @@ const Recipes: React.FC = () => {
                       onClick={() => toggleComments(recipe.id)}
                       title='Комментарии'
                     >
-                      💬 {recipe.commentCount || 0}
+                      💬 ({getCommentCount(recipe.id)})
                     </button>
                     {isUserAuthor(recipe.author.id) && (
                       <button
@@ -467,7 +474,7 @@ const Recipes: React.FC = () => {
                 {/* Комментарии */}
                 {showComments === recipe.id && (
                   <div className='comments-section'>
-                    <h4>Комментарии ({recipe.commentCount || 0})</h4>
+                    <h4>Комментарии ({getCommentCount(recipe.id)})</h4>
 
                     {isAuthenticated ? (
                       <form onSubmit={e => handleAddComment(recipe.id, e)} className='comment-form'>

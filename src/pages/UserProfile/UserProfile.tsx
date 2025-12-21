@@ -335,19 +335,14 @@ const UserProfile: React.FC = () => {
 
     try {
       await deleteComment(recipeId, commentId);
-
-      await fetchComments(recipeId);
-
-      setUserRecipes(prevRecipes =>
-        prevRecipes.map(recipe =>
-          recipe.id === recipeId
-            ? { ...recipe, commentCount: Math.max(0, recipe.commentCount - 1) }
-            : recipe,
-        ),
-      );
-    } catch (error) {
+    } catch {
       alert('Не удалось удалить комментарий');
     }
+  };
+
+  const getCommentCount = (recipeId: number): number => {
+    const recipeComments = comments[recipeId] || [];
+    return recipeComments.reduce((total, comment) => total + 1 + (comment.replies?.length || 0), 0);
   };
 
   const handleReply = (commentId: number): void => {
@@ -537,7 +532,7 @@ const UserProfile: React.FC = () => {
                           onClick={() => toggleComments(recipe.id)}
                           title='Комментарии'
                         >
-                          💬 {recipe.commentCount || 0}
+                          💬 ({getCommentCount(recipe.id)})
                         </button>
                         {recipe.likes > 0 && (
                           <div className='likes-info'>
@@ -572,7 +567,7 @@ const UserProfile: React.FC = () => {
 
                     {showComments === recipe.id && (
                       <div className='comments-section'>
-                        <h4>Комментарии ({recipe.commentCount || 0})</h4>
+                        <h4>Комментарии ({getCommentCount(recipe.id)})</h4>
 
                         {isAuthenticated ? (
                           <form
