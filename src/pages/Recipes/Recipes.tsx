@@ -62,6 +62,7 @@ const Recipes: React.FC = () => {
   const { user: currentUser } = useAuthStore();
   const [showLikesModal, setShowLikesModal] = useState(false);
   const [selectedRecipeIdForLikes, setSelectedRecipeIdForLikes] = useState<number | null>(null);
+  const [commentsInitialized, setCommentsInitialized] = useState(false);
 
   useEffect(() => {
     fetchRecipes();
@@ -105,20 +106,20 @@ const Recipes: React.FC = () => {
     };
 
     checkFavorites();
-  }, [isAuthenticated]);
+  }, [isAuthenticated, recipes.length]);
 
   useEffect(() => {
     const initComments = async () => {
       for (const recipe of recipes) {
         await fetchComments(recipe.id);
       }
+      setCommentsInitialized(true);
     };
 
-    if (recipes.length > 0) {
+    if (!commentsInitialized && recipes.length > 0) {
       initComments();
     }
-  }, [recipes]);
-
+  }, [recipes, commentsInitialized, fetchComments]);
   const handleReply = (commentId: number): void => {
     setReplyingTo(replyingTo === commentId ? null : commentId);
     setReplyContent('');
